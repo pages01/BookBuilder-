@@ -346,12 +346,26 @@ function makeFallbackPages(title, description, category, count) {
   const allowed = CATEGORY_SCENES[category] || CATEGORY_SCENES.General;
   const seed = hashText(title + description + category);
   const matched = chooseScene(description, allowed);
+  const titleVariations = {
+    Animals:["in a sunny garden","playing with a toy","at a picnic","under a leafy tree","on a little adventure","among the flowers"],
+    Space:["on a moon mission","near a ringed planet","among the stars","visiting a space station","flying past a comet","exploring a new world"],
+    Ocean:["in a coral garden","under the waves","with ocean friends","near a seashell beach","through a bubble trail","by the reef"],
+    Dinosaurs:["in a prehistoric jungle","near a volcano","beside giant leaves","on a dinosaur adventure","in a fern forest","by a rocky hill"],
+    Vehicles:["on a winding road","at the train station","up in the clouds","on a country trip","near a little bridge","on a busy day"],
+    Nature:["in a blooming garden","on a sunny afternoon","beside a tall tree","in a butterfly meadow","after a gentle rain","in a flower patch"],
+    Fantasy:["in an enchanted garden","under a starry sky","on a magical adventure","near a fairytale tower","in a cloud kingdom","beside a tiny cottage"],
+    Food:["at a sweet little picnic","in a cozy bakery","on a party table","at a fruit stand","during a fun celebration","in a sunny kitchen"],
+    General:["on a happy adventure","in a cozy little place","on a sunny afternoon","at playtime","in a friendly neighborhood","on a special day"]
+  };
+  const extras = [["flower","sun"],["cloud","star"],["heart","bubble"],["leaf","flower"],["cloud","sun","star"],["bubble","leaf"]];
+  const variants = titleVariations[category] || titleVariations.General;
   const pages = [];
   for (let i = 0; i < count; i++) {
     const scene = i === 0 ? matched : allowed[(i * 3 + (seed % allowed.length)) % allowed.length];
     const base = SCENES[scene] || SCENES.flower;
-    const extraSets = [["flower","sun"],["cloud","star"],["heart","bubble"],["leaf","flower"],["cloud","sun","star"],["bubble","leaf"]];
-    pages.push({title: base.title, scene: scene, extras: extraSets[i % extraSets.length], note: "A simple, cheerful " + base.title.toLowerCase() + " to color."});
+    const suffix = variants[(i + Math.floor(seed / 7)) % variants.length];
+    const pageTitle = i === 0 ? base.title : base.title + " " + suffix;
+    pages.push({title: pageTitle, scene, extras: extras[i % extras.length], note: base.title + " " + suffix + "."});
   }
   return pages;
 }
@@ -437,15 +451,20 @@ modelButton.addEventListener("click", async () => {
   }
 });
 
-async function askPlanner(title, description, category, count, fallback) {
+async function askPlanner(title, description, category, count, fallback, buildTime) {
   if (!planner) return fallback;
   const allowed = (CATEGORY_SCENES[category] || CATEGORY_SCENES.General).join(", ");
-  const system = "You plan friendly children's coloring books. Output only valid JSON, no markdown. Use exactly the allowed scene IDs. Every idea must be simple, cheerful, safe, and easy to draw as thick black outlines on white paper. No words inside the drawings, no color, no scary scenes. Each page may also choose 2 or 3 extras from flower, cloud, star, heart, bubble, leaf, and sun. JSON format: {\"pages\":[{\"title\":\"Short page title\",\"scene\":\"one_allowed_id\"}]}";
-  const user = "Book title: " + title + "\nDescription: " + description + "\nCategory: " + category + "\nMake exactly " + count + " varied coloring page ideas. Allowed scene IDs: " + allowed + ". Use only those IDs. Add an extras array with 2 or 3 choices from flower, cloud, star, heart, bubble, leaf, and sun. Return JSON only.";
+  const detailInstruction = buildTime === "detailed"
+    ? "Design rich scenes with several distinct props and a setting; choose 3 or 4 extras per page."
+    : buildTime === "balanced"
+      ? "Design medium-detail scenes with a few props and a clear setting; choose 2 or 3 extras per page."
+      : "Design uncluttered scenes with one main subject and one or two extras.";
+  const system = "You plan friendly children's coloring books. Output only valid JSON, no markdown. Use exactly the allowed scene IDs. Every idea must be cheerful, safe, and drawable as bold black outlines on white paper. No text inside pictures, no color, no scary scenes. Each page must have its own distinct action or setting. " + detailInstruction + " Extras must be chosen only from flower, cloud, star, heart, bubble, leaf, and sun. JSON format: {\\\"pages\\\":[{\\\"title\\\":\\\"Short page title\\\",\\\"scene\\\":\\\"one_allowed_id\\\",\\\"extras\\\":[\\\"flower\\\",\\\"cloud\\\"]}]}";
+  const user = "Book title: " + title + "\\nDescription: " + description + "\\nCategory: " + category + "\\nMake exactly " + count + " varied coloring page ideas. Allowed scene IDs: " + allowed + ". Use only those IDs. Make page titles specific and do not repeat an idea. Return JSON only.";
   const result = await planner([{role:"system",content:system},{role:"user",content:user}], {
-    max_new_tokens: Math.min(900, 130 + count * 15),
+    max_new_tokens: Math.min(1200, 150 + count * 20),
     do_sample: false,
-    temperature: 0.3
+    temperature: 0.45
   });
   const response = extractModelText(result);
   return parseModelPages(response, fallback, count);
@@ -577,7 +596,8 @@ function makeSvg(page, index, total, bookTitle, category, buildTime) {
 function renderBook(book) {
   currentBook = book;
   $("previewTitle").textContent = book.title;
-  $("previewMeta").textContent = book.pages.length + " pages · " + book.category + " · " + (book.aiUsed ? "planned with local AI" : "created with the built-in local planner");
+  $("previewMeta").textContent = book.pages.length + " pages · " + book.category + " · " +
+    (book.buildTime || "balanced") + " detail · " + (book.aiUsed ? "local AI plan" : "built-in plan");
   pageGrid.innerHTML = "";
   book.pages.forEach((page, index) => {
     const card = document.createElement("article");
@@ -596,6 +616,166 @@ function renderBook(book) {
   previewSection.style.display = "block";
   previewSection.scrollIntoView({behavior:"smooth",block:"start"});
 }
+
+const DB_NAME = "doodlepress-library";
+const DB_VERSION = 1;
+function openLibraryDB() {
+  return new Promise((resolve,reject) => {
+    if (!("indexedDB" in window)) { reject(new Error("This browser does not support on-device library storage.")); return; }
+    const request = indexedDB.open(DB_NAME,DB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains("books")) {
+        const store = db.createObjectStore("books",{keyPath:"id"});
+        store.createIndex("savedAt","savedAt",{unique:false});
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("Could not open your library."));
+  });
+}
+async function libraryRequest(mode, action) {
+  const db = await openLibraryDB();
+  return new Promise((resolve,reject) => {
+    const tx = db.transaction("books",mode);
+    const store = tx.objectStore("books");
+    let request;
+    try { request = action(store); }
+    catch (error) { db.close(); reject(error); return; }
+    tx.oncomplete = () => { db.close(); resolve(request ? request.result : undefined); };
+    tx.onerror = () => { db.close(); reject(tx.error || new Error("Library action failed.")); };
+    tx.onabort = () => { db.close(); reject(tx.error || new Error("Library action was canceled.")); };
+  });
+}
+async function saveBook(book) {
+  book.id = book.id || (Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,9));
+  book.savedAt = new Date().toISOString();
+  await libraryRequest("readwrite",store => store.put(book));
+  const saved = await getSavedBooks();
+  for (const old of saved.slice(18)) await deleteSavedBook(old.id);
+  await refreshLibraryCount();
+  return book;
+}
+async function getSavedBooks() {
+  const books = await libraryRequest("readonly",store => store.getAll());
+  return (books || []).sort((a,b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+}
+async function getSavedBook(id) {
+  return libraryRequest("readonly",store => store.get(id));
+}
+async function deleteSavedBook(id) {
+  await libraryRequest("readwrite",store => store.delete(id));
+}
+async function clearSavedBooks() {
+  await libraryRequest("readwrite",store => store.clear());
+}
+function closeLibrary() {
+  $("libraryOverlay").classList.remove("open");
+  document.body.style.overflow = "";
+}
+function openLibrary() {
+  $("libraryOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+  refreshLibrary();
+}
+async function refreshLibraryCount() {
+  try {
+    const books = await getSavedBooks();
+    $("libraryCount").textContent = String(books.length);
+  } catch (_) {
+    $("libraryCount").textContent = "—";
+  }
+}
+async function refreshLibrary() {
+  const list = $("libraryList");
+  list.innerHTML = "";
+  try {
+    const books = await getSavedBooks();
+    $("libraryCount").textContent = String(books.length);
+    $("librarySummary").textContent = books.length ? books.length + " saved book" + (books.length === 1 ? "" : "s") : "No saved designs yet";
+    $("clearLibrary").disabled = books.length === 0;
+    if (!books.length) {
+      const empty = document.createElement("div");
+      empty.className = "library-empty";
+      empty.textContent = "Your creations will appear here after you build your first coloring book.";
+      list.append(empty);
+      return;
+    }
+    for (const book of books) {
+      const item = document.createElement("article");
+      item.className = "library-item";
+      const img = document.createElement("img");
+      img.className = "library-thumb";
+      img.alt = "Preview of " + book.title;
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(book.pages?.[0]?.svg || "");
+      const body = document.createElement("div");
+      const heading = document.createElement("h3");
+      heading.textContent = book.title || "Untitled coloring book";
+      const desc = document.createElement("p");
+      const date = book.savedAt ? new Date(book.savedAt).toLocaleDateString() : "Saved on this device";
+      desc.textContent = (book.pages?.length || 0) + " pages · " + (book.category || "General") + " · " + date;
+      const actions = document.createElement("div");
+      actions.className = "library-item-actions";
+      const open = document.createElement("button");
+      open.className = "secondary";
+      open.type = "button";
+      open.textContent = "Open book";
+      open.dataset.openBook = book.id;
+      const remove = document.createElement("button");
+      remove.className = "secondary delete-design";
+      remove.type = "button";
+      remove.textContent = "Delete";
+      remove.dataset.deleteBook = book.id;
+      actions.append(open,remove);
+      body.append(heading,desc,actions);
+      item.append(img,body);
+      list.append(item);
+    }
+  } catch (error) {
+    const empty = document.createElement("div");
+    empty.className = "library-empty";
+    empty.textContent = "This browser could not open saved designs. Try refreshing the page.";
+    list.append(empty);
+    $("librarySummary").textContent = "Library unavailable";
+  }
+}
+
+$("libraryOpen").addEventListener("click",openLibrary);
+$("libraryClose").addEventListener("click",closeLibrary);
+$("libraryOverlay").addEventListener("click",event => {
+  if (event.target === $("libraryOverlay")) closeLibrary();
+});
+$("libraryList").addEventListener("click",async event => {
+  const openButton = event.target.closest("[data-open-book]");
+  const deleteButton = event.target.closest("[data-delete-book]");
+  try {
+    if (openButton) {
+      const book = await getSavedBook(openButton.dataset.openBook);
+      if (!book) throw new Error("That saved book is no longer available.");
+      renderBook(book);
+      closeLibrary();
+      toast("Opened " + book.title + ".");
+    }
+    if (deleteButton) {
+      await deleteSavedBook(deleteButton.dataset.deleteBook);
+      await refreshLibrary();
+    }
+  } catch (error) {
+    toast(error.message || "Library action failed.");
+  }
+});
+$("clearLibrary").addEventListener("click",async () => {
+  if (!window.confirm("Delete all saved coloring books from this device?")) return;
+  try {
+    await clearSavedBooks();
+    await refreshLibrary();
+    toast("Your library is cleared.");
+  } catch (error) { toast("Could not clear the library."); }
+});
+document.addEventListener("keydown",event => {
+  if (event.key === "Escape") closeLibrary();
+});
+
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
