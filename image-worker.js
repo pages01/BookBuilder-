@@ -11,7 +11,17 @@ const send = (id,type,data={}) => self.postMessage({id,type,...data});
 
 async function getOrt() {
   if (!ortPromise) {
-    ortPromise = import("https://esm.sh/onnxruntime-web@1.22.0?bundle").then(module => module.default || module);
+    ortPromise = (async () => {
+      if (!self.ort || !self.ort.InferenceSession) {
+        importScripts("https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.min.js");
+      }
+      const runtime = self.ort;
+      if (!runtime || !runtime.InferenceSession) {
+        throw new Error("ONNX Runtime could not be loaded. Check that this browser can access jsDelivr.");
+      }
+      runtime.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/";
+      return runtime;
+    })();
   }
   return ortPromise;
 }
