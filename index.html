@@ -11,19 +11,19 @@
   <style>
     :root{--ink:#242321;--muted:#77746e;--paper:#fbf8f2;--card:#fffefa;--line:#e9e2d7;--pink:#ff786b;--pink2:#ffe5df;--lav:#ded8ff;--mint:#dff2e7;--gold:#ffe8a8;--shadow:0 18px 55px rgba(54,42,30,.08)}
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
+    html{scroll-behavior:auto}
     body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
     button,input,textarea,select{font:inherit}
     button{cursor:pointer}
-    .shell{width:min(1100px,calc(100% - 32px));margin:0 auto;padding:22px 0 60px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:44px}
+    .shell{width:min(1100px,calc(100% - 32px));margin:0 auto;padding:10px 0 60px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
     .brand{display:flex;align-items:center;gap:11px;font-weight:850;letter-spacing:-.7px;font-size:21px}
     .brand-mark{width:39px;height:39px;display:grid;place-items:center;border-radius:13px;background:var(--pink2);border:1px solid #ffd1c8}
     .brand-mark svg{width:25px;height:25px}
     .top-note{font-size:12px;font-weight:750;color:#55514a;background:#f1ece3;border:1px solid var(--line);padding:8px 12px;border-radius:99px}
-    .hero{max-width:760px;margin:0 auto 34px;text-align:center}
+    .hero{max-width:760px;margin:4px auto 24px;text-align:center}
     .eyebrow{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;background:var(--mint);border-radius:99px;color:#315744;font-weight:800;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
-    h1{font-size:clamp(35px,6vw,62px);line-height:1.02;letter-spacing:-2.8px;margin:18px 0 14px;font-weight:900}
+    h1{font-size:clamp(35px,6vw,62px);line-height:1.02;letter-spacing:-2.8px;margin:10px 0 10px;font-weight:900}
     h1 .accent{color:#f16f61}
     .hero p{color:var(--muted);font-size:16px;line-height:1.65;max-width:590px;margin:0 auto}
     .layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;align-items:start}
@@ -66,7 +66,7 @@
     .secondary{border:1px solid var(--line);background:#fffefa;padding:10px 13px;border-radius:11px;font-size:12px;font-weight:850;color:var(--ink)}
     .secondary.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
     .page-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
-    .page-card{padding:9px;background:#fff;border:1px solid var(--line);border-radius:13px;min-width:0}
+    .page-card{padding:9px;background:#fff;border:1px solid var(--line);border-radius:13px;min-width:0;content-visibility:auto;contain-intrinsic-size:auto 380px}
     .page-card img{display:block;width:100%;aspect-ratio:4/5;object-fit:contain;background:white;border-radius:7px}
     .page-card strong{display:block;font-size:11px;margin:8px 2px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .page-card span{font-size:10px;color:var(--muted);margin-left:2px}
@@ -77,7 +77,7 @@
     .toast.show{opacity:1;transform:translate(-50%,0)}
     .small-print{color:#999187;font-size:10px;line-height:1.5;margin-top:12px}
     @media(max-width:800px){.layout{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr}.page-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{margin-bottom:26px}header{margin-bottom:30px}}
-    @media(max-width:540px){.shell{width:min(100% - 22px,680px);padding-top:15px}.top-note{font-size:10px;padding:7px 9px}.brand{font-size:19px}.hero p{font-size:14px}.form-panel{padding:18px}.two-col{grid-template-columns:1fr 1fr;gap:10px}.side-stack{grid-template-columns:1fr}.page-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.preview-top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions button{flex:1}.preview-top h2{font-size:21px}h1{letter-spacing:-1.8px}.ai-card{padding:17px}}
+    @media(max-width:540px){.shell{width:min(100% - 22px,680px);padding-top:8px}.top-note{font-size:10px;padding:7px 9px}.brand{font-size:19px}.hero p{font-size:14px}.form-panel{padding:18px}.two-col{grid-template-columns:1fr 1fr;gap:10px}.side-stack{grid-template-columns:1fr}.page-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.preview-top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions button{flex:1}.preview-top h2{font-size:21px}h1{letter-spacing:-1.8px}.ai-card{padding:17px}}
   
     .top-actions{display:flex;align-items:center;gap:9px}
     .library-open{border:1px solid var(--line);background:#fffefa;border-radius:12px;padding:9px 13px;font-size:12px;font-weight:850;color:var(--ink);display:flex;align-items:center;gap:7px}
@@ -112,7 +112,7 @@
     .build-progress{height:7px;border-radius:99px;background:#eee8df;overflow:hidden;display:none;margin-top:12px}
     .build-progress span{display:block;width:0;height:100%;background:var(--pink);transition:width .2s}
     @media(max-width:540px){
-      header{align-items:flex-start}
+      header{align-items:flex-start;margin-bottom:12px}
       .top-actions{flex-direction:column;align-items:flex-end}
       .library-open{padding:8px 10px;font-size:11px}
       .top-note{font-size:9px;white-space:nowrap}
@@ -195,25 +195,15 @@
         </div>
         <div class="ai-settings-content">
           <section class="ai-group">
-            <div class="ai-group-heading"><h3>Image generation</h3><span class="model-pill active">1 AVAILABLE</span></div>
-            <p class="ai-explain">These engines create the actual drawings. The first option works now; the neural models are listed as upcoming options and are not falsely presented as installed.</p>
-            <div class="model-choice-list">
-              <div class="model-option selected">
-                <span class="model-radio-dot"></span>
-                <div class="model-copy"><strong>DoodlePress Vector Art</strong><span>Available now · No model download. Crisp, clean outlines that print sharply and work well on iPhone.</span></div>
-                <span class="model-pill active">ACTIVE</span>
-              </div>
-              <div class="model-option unavailable" aria-disabled="true">
-                <span class="model-radio-dot"></span>
-                <div class="model-copy"><strong>SD-Turbo · ONNX WebGPU</strong><span>Neural text-to-image generation in the browser. A separate diffusion runtime and a large first download are still needed before DoodlePress can use it.</span></div>
-                <span class="model-pill">COMING SOON</span>
-              </div>
-              <div class="model-option unavailable" aria-disabled="true">
-                <span class="model-radio-dot"></span>
-                <div class="model-copy"><strong>Sana 0.6B · ONNX WebGPU</strong><span>A more advanced neural image model. Its model files total several gigabytes and it targets devices with a powerful WebGPU graphics processor; not suitable for most phones.</span></div>
-                <span class="model-pill">EXPERIMENTAL</span>
-              </div>
+            <div class="ai-group-heading"><h3>Image generation</h3><span class="model-pill active">3 ENGINES</span></div>
+            <p class="ai-explain">Choose what actually draws the coloring pages. Neural models run locally on your device after their first download.</p>
+            <div class="model-choice-list" id="imageModelChoices">
+              <label class="model-option selected" for="imageVector"><input type="radio" name="imageModel" id="imageVector" value="vector" checked><span class="model-radio-dot"></span><div class="model-copy"><strong>DoodlePress Vector Art</strong><span>Instant built-in SVG line art. Small files, crisp print quality, and works without WebGPU.</span></div><span class="model-pill active">READY</span></label>
+              <label class="model-option" for="imageSdTurbo"><input type="radio" name="imageModel" id="imageSdTurbo" value="sd-turbo"><span class="model-radio-dot"></span><div class="model-copy"><strong>Stable Diffusion Turbo</strong><span>Neural image generation · About 2.4 GB · 512×512 · Requires WebGPU. Creates a fresh illustration for every page.</span></div><span class="model-pill">WEBGPU</span></label>
+              <label class="model-option" for="imageJanus"><input type="radio" name="imageModel" id="imageJanus" value="janus-pro-1b"><span class="model-radio-dot"></span><div class="model-copy"><strong>Janus-Pro-1B</strong><span>Advanced neural image generation · About 2.3 GB · Requires WebGPU and more memory.</span></div><span class="model-pill">ADVANCED</span></label>
             </div>
+            <div class="ai-control-row"><span id="imageSelectionState">DoodlePress Vector Art selected</span><button class="secondary" id="prepareImageButton" type="button">Prepare selected</button><button class="secondary" id="unloadImageButton" type="button">Unload image model</button><button class="secondary delete-design" id="clearImageCacheButton" type="button">Clear SD-Turbo cache</button></div>
+            <div class="ai-storage-note" id="imageModelStatus">Vector Art is ready immediately. Neural models download on first use and run in a background worker.</div>
           </section>
 
           <section class="ai-group">
@@ -240,7 +230,7 @@
             </div>
             <div class="ai-storage-note" id="aiHelperStatus">The selected helper is prepared automatically when DoodlePress opens. Downloaded files stay in this browser cache until the browser clears them or you remove the saved helper.</div>
           </section>
-          <div class="notice"><strong>Privacy:</strong> Helper-model inference and the current vector artwork run in your browser. The two neural image models above are not connected yet, so selecting them is not possible until their separate generation pipeline is added.</div>
+          <div class="notice"><strong>Privacy:</strong> Page planning and image generation run locally in your browser. The first neural-model setup needs internet access to download model files. Generated books stay in your local library.</div>
         </div>
       </section>
     </div>
@@ -332,7 +322,17 @@ const HELPER_MODELS = {
   qwen: {id:"onnx-community/Qwen3-0.6B-ONNX", name:"Qwen3-0.6B", size:"about 570–920 MB", detail:"A larger helper with more room for varied page ideas. It needs more storage and memory."}
 };
 const HELPER_PREFERENCE_KEY = "doodlepress-helper-model";
+const IMAGE_MODELS = {
+  vector:{id:"vector",name:"DoodlePress Vector Art"},
+  "sd-turbo":{id:"sd-turbo",name:"Stable Diffusion Turbo"},
+  "janus-pro-1b":{id:"janus-pro-1b",name:"Janus-Pro-1B"}
+};
+const IMAGE_PREFERENCE_KEY = "doodlepress-image-model";
 let planner = null;
+let imageWorker = null;
+let imageRequestCounter = 0;
+let imageModelLoaded = null;
+const imageRequests = new Map();
 let currentBook = null;
 let toastTimer = null;
 
@@ -534,7 +534,115 @@ function getSelectedHelperModel() {
   const key = localStorage.getItem(HELPER_PREFERENCE_KEY) || "lfm";
   return HELPER_MODELS[key] ? key : "lfm";
 }
+function getSelectedImageModel() {
+  const key = localStorage.getItem(IMAGE_PREFERENCE_KEY) || "vector";
+  return IMAGE_MODELS[key] ? key : "vector";
+}
+function syncImageSettings() {
+  const selected = getSelectedImageModel();
+  document.querySelectorAll('input[name="imageModel"]').forEach(input => {
+    const active = input.value === selected;
+    input.checked = active;
+    input.closest(".model-option")?.classList.toggle("selected",active);
+  });
+  $("imageSelectionState").textContent = IMAGE_MODELS[selected].name + " selected";
+  $("clearImageCacheButton").disabled = selected !== "sd-turbo";
+  $("imageModelStatus").textContent = selected === "vector"
+    ? "Vector Art is ready immediately. No download or WebGPU is needed."
+    : imageModelLoaded === selected
+      ? IMAGE_MODELS[selected].name + " is loaded and ready."
+      : "Selected: " + IMAGE_MODELS[selected].name + ". Prepare it now or create a book to download and load it.";
+}
+function getImageWorker() {
+  if (imageWorker) return imageWorker;
+  imageWorker = new Worker("./image-worker.js?v=1",{type:"module"});
+  imageWorker.addEventListener("message",event => {
+    const message = event.data || {};
+    const pending = imageRequests.get(message.id);
+    if (!pending) return;
+    if (message.type === "progress") pending.onProgress?.(message.progress || {});
+    else if (message.type === "result") { imageRequests.delete(message.id); pending.resolve(message); }
+    else if (message.type === "error") { imageRequests.delete(message.id); pending.reject(new Error(message.message || "Image model error.")); }
+  });
+  imageWorker.addEventListener("error",event => {
+    for (const pending of imageRequests.values()) pending.reject(new Error(event.message || "Image worker stopped."));
+    imageRequests.clear(); imageWorker = null; imageModelLoaded = null; syncImageSettings();
+  });
+  return imageWorker;
+}
+function imageWorkerRequest(type,payload={},onProgress) {
+  const worker = getImageWorker();
+  const id = "image-" + (++imageRequestCounter);
+  return new Promise((resolve,reject) => {
+    imageRequests.set(id,{resolve,reject,onProgress});
+    worker.postMessage({id,type,...payload});
+  });
+}
+async function prepareImageModel() {
+  const selected = getSelectedImageModel();
+  if (selected === "vector" || imageModelLoaded === selected) return true;
+  if (!navigator.gpu) throw new Error("This browser does not expose WebGPU. Choose Vector Art or use a WebGPU-compatible browser.");
+  $("prepareImageButton").disabled = true;
+  $("imageModelStatus").textContent = "Starting " + IMAGE_MODELS[selected].name + "…";
+  try {
+    const response = await imageWorkerRequest("load",{model:selected},progress => {
+      const pct = typeof progress.pct === "number" ? " " + Math.round(progress.pct) + "%" : "";
+      $("imageModelStatus").textContent = (progress.message || progress.phase || "Loading model") + pct;
+    });
+    if (!response.result?.ok) throw new Error(response.result?.message || "Image model failed to load.");
+    imageModelLoaded = selected;
+    syncImageSettings();
+    return true;
+  } finally { $("prepareImageButton").disabled = false; }
+}
+async function unloadImageModel() {
+  if (!imageWorker || !imageModelLoaded) { $("imageModelStatus").textContent = "No neural image model is loaded."; return; }
+  await imageWorkerRequest("unload");
+  imageModelLoaded = null;
+  syncImageSettings();
+}
+async function clearSdTurboCache() {
+  if (getSelectedImageModel() !== "sd-turbo") return;
+  $("clearImageCacheButton").disabled = true;
+  try {
+    if (imageModelLoaded === "sd-turbo") await unloadImageModel();
+    await imageWorkerRequest("purge",{model:"sd-turbo"});
+    $("imageModelStatus").textContent = "SD-Turbo's DoodlePress cache was cleared. It will download again next time.";
+    toast("SD-Turbo cache cleared.");
+  } catch(error) { toast(error.message || "Could not clear the SD-Turbo cache."); }
+  finally { $("clearImageCacheButton").disabled = false; syncImageSettings(); }
+}
+async function blobToOutlineDataUrl(blob) {
+  const bitmap = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 512;
+  const ctx = canvas.getContext("2d",{willReadFrequently:true});
+  if (!ctx) throw new Error("Could not prepare the generated coloring-page image.");
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,512,512);
+  const scale=Math.min(512/bitmap.width,512/bitmap.height),w=bitmap.width*scale,h=bitmap.height*scale;
+  ctx.drawImage(bitmap,(512-w)/2,(512-h)/2,w,h); bitmap.close?.();
+  const image=ctx.getImageData(0,0,512,512),src=image.data,gray=new Uint8Array(512*512);
+  for(let i=0,p=0;i<src.length;i+=4,p++) gray[p]=Math.round(.299*src[i]+.587*src[i+1]+.114*src[i+2]);
+  const out=ctx.createImageData(512,512),dst=out.data;
+  for(let y=1;y<511;y++) for(let x=1;x<511;x++){
+    const p=y*512+x;
+    const gx=-gray[p-513]+gray[p-511]-2*gray[p-1]+2*gray[p+1]-gray[p+511]+gray[p+513];
+    const gy=-gray[p-513]-2*gray[p-512]-gray[p-511]+gray[p+511]+2*gray[p+512]+gray[p+513];
+    const ink=Math.sqrt(gx*gx+gy*gy)>115?0:255,q=p*4;
+    dst[q]=dst[q+1]=dst[q+2]=ink;dst[q+3]=255;
+  }
+  ctx.putImageData(out,0,0);
+  return canvas.toDataURL("image/png");
+}
+function buildImagePrompt(book,page) {
+  const scene=SCENES[page.scene]?.title||page.scene||"a friendly character";
+  const extras=Array.isArray(page.extras)?page.extras.join(", "):"";
+  return "Printable children's coloring-book illustration, pure black ink outlines on plain white paper. Main subject: "+scene+
+    ". Scene: "+page.title+". Theme: "+book.description+". Supporting objects: "+extras+
+    ". One large friendly subject, clean rounded contours, simple readable composition, large open areas for crayons. No shading, grayscale, color, solid black fills, words, letters, watermark, or border. Square image.";
+}
 function syncAiSettings() {
+  syncImageSettings();
   const selected = getSelectedHelperModel();
   document.querySelectorAll('input[name="helperModel"]').forEach(input => {
     const active = input.value === selected;
@@ -790,7 +898,8 @@ function makeSvg(page, index, total, bookTitle, category, buildTime) {
   return '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000"><rect width="800" height="1000" fill="white"/>' + frame +
     '<text x="400" y="120" text-anchor="middle" font-family="Arial,sans-serif" font-size="29" font-weight="700" fill="#171717">' + esc(heading) + '</text>' + subtitle + headerLine +
     background + sparkles + renderExtras(page,index,buildTime) + supportingObjects(page,category,index,buildTime) +
-    '<g transform="translate(140 245) scale(1.0)">' + sceneArt(scene) + '</g>' + detailLines + number + '</svg>';
+    (page.aiImageData ? '<image x="100" y="235" width="600" height="620" preserveAspectRatio="xMidYMid meet" href="' + page.aiImageData + '"/>'
+      : '<g transform="translate(140 245) scale(1.0)">' + sceneArt(scene) + '</g>') + detailLines + number + '</svg>';
 }
 
 function coverText(value, y, fontSize, color) {
@@ -865,22 +974,25 @@ function renderBook(book) {
     ...book.pages,
     {title:"Back cover",scene:"Book back",svg:book.backSvg}
   ];
+  const fragment = document.createDocumentFragment();
   displayPages.forEach((page,index) => {
     const card = document.createElement("article");
     card.className = "page-card";
     const img = document.createElement("img");
     img.alt = index === 0 ? "Front cover: " + book.title : index === displayPages.length - 1 ? "Back cover: " + book.title : "Coloring page " + index + ": " + page.title;
     img.loading = index > 7 ? "lazy" : "eager";
+    img.decoding = "async";
     img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(page.svg);
     const strong = document.createElement("strong");
     strong.textContent = index === 0 ? "Front cover" : index === displayPages.length - 1 ? "Back cover" : index + ". " + page.title;
     const span = document.createElement("span");
     span.textContent = page.scene || (index === 0 ? "Cover design" : "Back cover design");
     card.append(img,strong,span);
-    pageGrid.append(card);
+    fragment.append(card);
   });
+  pageGrid.replaceChildren(fragment);
   previewSection.style.display = "block";
-  previewSection.scrollIntoView({behavior:"smooth",block:"start"});
+  previewSection.scrollIntoView({behavior:"auto",block:"start"});
 }
 const DB_NAME = "doodlepress-library";
 const DB_VERSION = 1;
@@ -1025,6 +1137,17 @@ document.querySelectorAll('input[name="helperModel"]').forEach(input => {
     }
   });
 });
+document.querySelectorAll('input[name="imageModel"]').forEach(input => input.addEventListener("change",() => {
+  localStorage.setItem(IMAGE_PREFERENCE_KEY,input.value); syncImageSettings();
+}));
+$("prepareImageButton").addEventListener("click",async () => {
+  try { await prepareImageModel(); toast(IMAGE_MODELS[getSelectedImageModel()].name + " is ready."); }
+  catch(error) { $("imageModelStatus").textContent=error.message; toast(error.message); }
+});
+$("unloadImageButton").addEventListener("click",async () => {
+  try { await unloadImageModel(); toast("Neural image model unloaded."); } catch(error) { toast(error.message); }
+});
+$("clearImageCacheButton").addEventListener("click",clearSdTurboCache);
 $("loadHelperButton").addEventListener("click",async () => {
   $("loadHelperButton").disabled = true;
   try {
@@ -1038,6 +1161,7 @@ $("loadHelperButton").addEventListener("click",async () => {
 });
 $("removeHelperButton").addEventListener("click",clearHelperCache);
 syncAiSettings();
+syncImageSettings();
 $("libraryClose").addEventListener("click",closeLibrary);
 $("libraryOverlay").addEventListener("click",event => {
   if (event.target === $("libraryOverlay")) closeLibrary();
@@ -1093,6 +1217,8 @@ form.addEventListener("submit", async (event) => {
     let pages = fallback;
     let aiUsed = false;
     const helperModel = getSelectedHelperModel();
+    const imageModel = getSelectedImageModel();
+    if (imageModel !== "vector") await prepareImageModel();
     try {
       if (!planner || plannerModelId !== HELPER_MODELS[helperModel].id) await loadPlanner();
       if (planner && plannerModelId === HELPER_MODELS[helperModel].id) {
@@ -1107,14 +1233,22 @@ form.addEventListener("submit", async (event) => {
     }
     pages = uniquePageList(pages,backupPages,count);
     createButton.textContent = "Drawing page 1 of " + count + "…";
-    const book = {schemaVersion:2,title,description,category,buildTime,aiUsed,helperModel,pages:[]};
+    const book = {schemaVersion:2,title,description,category,buildTime,aiUsed,helperModel,imageModel,pages:[]};
     for (let index = 0; index < pages.length; index++) {
       const page = pages[index];
+      if (imageModel !== "vector") {
+        createButton.textContent = "Generating illustration " + (index + 1) + " of " + count + "…";
+        const generated = await imageWorkerRequest("generate",{model:imageModel,prompt:buildImagePrompt(book,page),seed:hashText(title+page.title+index)},progress => {
+          modelProgressLabel.textContent = "Image " + (index+1) + "/" + count + " · " + (progress.phase || "Generating");
+        });
+        if (!generated.blob) throw new Error("The image model did not return an image.");
+        page.aiImageData = await blobToOutlineDataUrl(generated.blob);
+      }
       book.pages.push({...page, svg:makeSvg(page,index,count,title,category,buildTime)});
       const percent = Math.round(((index + 1) / count) * 100);
       buildProgressBar.style.width = percent + "%";
       createButton.textContent = "Drawing page " + (index + 1) + " of " + count + "…";
-      if (index % 2 === 1) await new Promise(resolve => requestAnimationFrame(resolve));
+      await new Promise(resolve => requestAnimationFrame(resolve));
     }
     book.coverSvg = makeCoverSvg(book);
     book.backSvg = makeBackCoverSvg(book);
@@ -1140,7 +1274,7 @@ form.addEventListener("submit", async (event) => {
 });
 
 $("editButton").addEventListener("click", () => {
-  window.scrollTo({top:0,behavior:"smooth"});
+  window.scrollTo({top:0,behavior:"auto"});
 });
 function loadScript(url) {
   return new Promise((resolve,reject) => {
