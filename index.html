@@ -666,9 +666,22 @@ function svgNumber(value,minimum=0,maximum=512) {
   if(!Number.isFinite(number)) return null;
   return String(Math.max(minimum,Math.min(maximum,number)));
 }
+function isUsableSvgPathData(value) {
+  if(typeof value!=="string" || value.length<8 || value.length>1600) return false;
+  if(/[<>]|\.\.\.|…/.test(value) || !/^[Mm]/.test(value.trim())) return false;
+  if(!/^[MmLlHhVvCcSsQqTtAaZz0-9eE.,+\-\s]+$/.test(value)) return false;
+  const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+  path.setAttribute("d",value);
+  if(typeof path.getTotalLength==="function") {
+    try { const length=path.getTotalLength(); return Number.isFinite(length) && length>4; }
+    catch(_) { return false; }
+  }
+  const commands=(value.match(/[MmLlHhVvCcSsQqTtAaZz]/g)||[]).length;
+  const numbers=(value.match(/-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi)||[]).length;
+  return commands>=2 && numbers>=4;
+}
 function makeGeneratedArtMarkup(spec) {
   if(!spec || !Array.isArray(spec.shapes) || spec.shapes.length<1) return null;
-  const safePath=/^[MmLlHhVvCcSsQqTtAaZz0-9eE.,+\-\s]+$/;
   const safePoints=/^[0-9eE.,+\-\s]+$/;
   const markup=[];
   for(const shape of spec.shapes.slice(0,42)) {
@@ -677,7 +690,7 @@ function makeGeneratedArtMarkup(spec) {
     const strokeWidth=Math.max(2,Math.min(11,Number(shape.strokeWidth)||6));
     const fill=["none","white","black"].includes(String(shape.fill || "").toLowerCase()) ? String(shape.fill).toLowerCase() : "none";
     const common=' stroke="#151515" stroke-width="'+strokeWidth+'" stroke-linecap="round" stroke-linejoin="round" fill="'+fill+'"';
-    if(type==="path" && typeof shape.d==="string" && shape.d.length<=1600 && safePath.test(shape.d)) {
+    if(type==="path" && isUsableSvgPathData(shape.d)) {
       markup.push('<path d="'+shape.d+'"'+common+'/>');
     } else if(type==="circle") {
       const cx=svgNumber(shape.cx),cy=svgNumber(shape.cy),r=svgNumber(shape.r,1,256);
@@ -697,7 +710,7 @@ function makeGeneratedArtMarkup(spec) {
   }
   return markup.length>=1 ? markup.join("") : null;
 }
-const SKETCHFORGE_INSTRUCTIONS = "You are DoodlePress SketchForge, an illustrator that creates original black-and-white coloring-book vector art. Return only valid compact JSON in this format: {\"shapes\":[{\"type\":\"path\",\"d\":\"M 120 160 C ... Z\",\"strokeWidth\":8,\"fill\":\"white\"}]}. Use 1 to 6 large meaningful shapes only. A single well-drawn path may contain the entire main character. Coordinate space is 0 to 512. Allowed types: path, circle, ellipse, rect, line, polyline, polygon. Use thick black outlines, round joins, white or no fills, and big open coloring areas. Make the main subject recognizable and centered, with at most a few background details. No gray, shading, hatch, gradients, text, or tiny clutter. Path data may contain only normal SVG path commands and numbers.";
+const SKETCHFORGE_INSTRUCTIONS = "You are DoodlePress SketchForge, a vector illustrator for printable children's coloring pages. Return ONLY valid JSON with this exact structure: {\"shapes\":[{\"type\":\"path\",\"d\":\"M 120 160 C 160 80 280 80 320 160 C 350 240 300 330 220 330 C 140 330 90 240 120 160 Z\",\"strokeWidth\":8,\"fill\":\"white\"},{\"type\":\"circle\",\"cx\":220,\"cy\":205,\"r\":12,\"strokeWidth\":7,\"fill\":\"black\"}]}. The sample path above is real SVG path data. NEVER copy placeholder dots or ellipses. Generate 4 to 10 original shapes. Use a large recognizable main subject, expressive friendly details, and 2 to 4 objects that support the scene. Coordinate space is 0 to 512. Allowed types: path, circle, ellipse, rect, line, polyline, polygon. Use only standard SVG path commands followed by actual numbers. Start every path with M. Use bold black outlines, rounded joins, white or no fills, and large open spaces to color. No shading, hatching, gray, gradients, words, letters, or tiny clutter. The JSON must be complete and syntactically valid.";
 async function generateOutlineMarkup(book,page,index) {
   if(!planner) throw new Error("Storybook Director is not loaded, so SketchForge cannot draw this page.");
   const scene=SCENES[page.scene]?.title || page.scene || "a friendly character";
@@ -725,7 +738,7 @@ async function generateOutlineMarkup(book,page,index) {
       console.warn("SketchForge drawing attempt "+(attempt+1)+" failed.",error);
     }
   }
-  throw new Error("SketchForge couldn't finish this page after three attempts. Please try creating the book again.");
+  throw new Error("SketchForge couldn't produce a valid SVG drawing after three attempts. Please try again.");
 }
 function syncAiSettings() {
   syncImageSettings();
