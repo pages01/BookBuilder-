@@ -404,10 +404,12 @@ async function loadPlanner() {
     modelStatus.style.borderColor = "";
     setModelProgress(1, "Choosing the best local setup for this browser…");
     try {
-      const { pipeline, env } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0");
+      const { pipeline, env, ModelRegistry } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0");
       env.allowLocalModels = false;
       env.useBrowserCache = true;
       env.useWasmCache = true;
+      // Keep one stable Transformers.js cache so repeat visits reuse the same files.
+      env.cacheKey = "transformers-cache";
       let device = null;
       let dtype = "q4";
       if (navigator.gpu) {
@@ -416,11 +418,11 @@ async function loadPlanner() {
           if (adapter) { device = "webgpu"; dtype = "q4f16"; }
         } catch (_) {}
       }
-      setModelProgress(3, "Selected " + (device === "webgpu" ? "GPU acceleration" : "built-in CPU/WASM mode") + ". Preparing the local planner…");
+      setModelProgress(3, "Preparing the local planner…");
       const modelOptions = {dtype,
         progress_callback: (info) => {
           if (info && typeof info.progress === "number") {
-            const label = info.file ? "Getting " + info.file : "Preparing local model files…";
+            const label = info.file ? "Downloading " + info.file : "Preparing local model files…";
             setModelProgress(info.progress, label);
           } else if (info && info.status) {
             setModelProgress(10, info.status);
@@ -428,7 +430,24 @@ async function loadPlanner() {
         }
       };
       if (device) modelOptions.device = device;
+      let alreadyCached = false;
+      try {
+        alreadyCached = !!(ModelRegistry && await ModelRegistry.is_pipeline_cached("text-generation", MODEL_ID, {dtype}));
+      } catch (_) {}
+      setModelProgress(3, alreadyCached ? "Found the saved model on this device. Loading it without downloading again…" : "Preparing the local planner for its first use…");
       planner = await pipeline("text-generation", MODEL_ID, modelOptions);
+      // Remove only the previous DoodlePress model, never unrelated browser caches.
+      const modelRecordKey = "doodlepress-active-planner";
+      try {
+        const previous = JSON.parse(localStorage.getItem(modelRecordKey) || "null");
+        if (previous && previous.id && (previous.id !== MODEL_ID || previous.dtype !== dtype) &&
+            ModelRegistry && typeof ModelRegistry.clear_pipeline_cache === "function") {
+          await ModelRegistry.clear_pipeline_cache("text-generation", previous.id, {dtype: previous.dtype || "q4"});
+        }
+        localStorage.setItem(modelRecordKey, JSON.stringify({id:MODEL_ID,dtype}));
+      } catch (cleanupError) {
+        console.warn("Could not clean up a previous DoodlePress model cache.", cleanupError);
+      }
       modelStatus.textContent = "READY";
       modelStatus.style.background = "#e5f6e9";
       modelStatus.style.color = "#315744";
@@ -901,7 +920,7 @@ pdfButton.addEventListener("click", async () => {
 
 refreshLibraryCount().catch(() => {});
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=4", {updateViaCache:"none"}).catch(() => {}));
 }
 // Automatically prepare the selected starter model after the page is usable.
 // The browser cache keeps its files for later visits; no manual model picker is needed.
