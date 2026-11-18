@@ -848,29 +848,33 @@ function normalizeBook(book) {
 }
 
 function renderBook(book) {
-  currentBook = book;
+  currentBook = normalizeBook(book);
   $("previewTitle").textContent = book.title;
-  $("previewMeta").textContent = book.pages.length + " pages · " + book.category + " · " +
-    (book.buildTime || "balanced") + " detail · " + (book.aiUsed ? "local AI plan" : "built-in plan");
+  $("previewMeta").textContent = book.pages.length + " coloring pages + front and back cover · " + book.category + " · " +
+    (book.buildTime || "balanced") + " detail · " + (book.aiUsed ? HELPER_MODELS[book.helperModel || getSelectedHelperModel()].name + " plan" : "built-in plan");
   pageGrid.innerHTML = "";
-  book.pages.forEach((page, index) => {
+  const displayPages = [
+    {title:"Front cover",scene:"Book cover",svg:book.coverSvg},
+    ...book.pages,
+    {title:"Back cover",scene:"Book back",svg:book.backSvg}
+  ];
+  displayPages.forEach((page,index) => {
     const card = document.createElement("article");
     card.className = "page-card";
     const img = document.createElement("img");
-    img.alt = "Coloring page " + (index + 1) + ": " + page.title;
+    img.alt = index === 0 ? "Front cover: " + book.title : index === displayPages.length - 1 ? "Back cover: " + book.title : "Coloring page " + index + ": " + page.title;
     img.loading = index > 7 ? "lazy" : "eager";
     img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(page.svg);
     const strong = document.createElement("strong");
-    strong.textContent = (index + 1) + ". " + page.title;
+    strong.textContent = index === 0 ? "Front cover" : index === displayPages.length - 1 ? "Back cover" : index + ". " + page.title;
     const span = document.createElement("span");
-    span.textContent = page.scene;
-    card.append(img, strong, span);
+    span.textContent = page.scene || (index === 0 ? "Cover design" : "Back cover design");
+    card.append(img,strong,span);
     pageGrid.append(card);
   });
   previewSection.style.display = "block";
   previewSection.scrollIntoView({behavior:"smooth",block:"start"});
 }
-
 const DB_NAME = "doodlepress-library";
 const DB_VERSION = 1;
 function openLibraryDB() {
