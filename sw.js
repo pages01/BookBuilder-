@@ -1,5 +1,5 @@
 const CACHE_NAME = "doodlepress-shell-v6";
-const APP_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
+const APP_FILES = ["./", "./index.html", "./image-worker.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
