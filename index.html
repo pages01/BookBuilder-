@@ -434,25 +434,20 @@ function makeFallbackPages(title, description, category, count) {
   const allowed = CATEGORY_SCENES[category] || CATEGORY_SCENES.General;
   const seed = hashText(title + description + category);
   const matched = chooseScene(description, allowed);
-  const titleVariations = {
-    Animals:["in a sunny garden","playing with a toy","at a picnic","under a leafy tree","on a little adventure","among the flowers"],
-    Space:["on a moon mission","near a ringed planet","among the stars","visiting a space station","flying past a comet","exploring a new world"],
-    Ocean:["in a coral garden","under the waves","with ocean friends","near a seashell beach","through a bubble trail","by the reef"],
-    Dinosaurs:["in a prehistoric jungle","near a volcano","beside giant leaves","on a dinosaur adventure","in a fern forest","by a rocky hill"],
-    Vehicles:["on a winding road","at the train station","up in the clouds","on a country trip","near a little bridge","on a busy day"],
-    Nature:["in a blooming garden","on a sunny afternoon","beside a tall tree","in a butterfly meadow","after a gentle rain","in a flower patch"],
-    Fantasy:["in an enchanted garden","under a starry sky","on a magical adventure","near a fairytale tower","in a cloud kingdom","beside a tiny cottage"],
-    Food:["at a sweet little picnic","in a cozy bakery","on a party table","at a fruit stand","during a fun celebration","in a sunny kitchen"],
-    General:["on a happy adventure","in a cozy little place","on a sunny afternoon","at playtime","in a friendly neighborhood","on a special day"]
-  };
+  const variants = [
+    "on a sunny adventure","under a bright sky","with a new friend","beside a winding path",
+    "on a playful afternoon","near a peaceful pond","through a flower meadow","beside a tiny cottage",
+    "on a weekend outing","under fluffy clouds","by a little bridge","at a cheerful celebration",
+    "near a quiet garden","on a gentle adventure","beside a sparkling stream","among happy neighbors",
+    "at a fun festival","on a special day","in a storybook world"
+  ];
   const extras = [["flower","sun"],["cloud","star"],["heart","bubble"],["leaf","flower"],["cloud","sun","star"],["bubble","leaf"]];
-  const variants = titleVariations[category] || titleVariations.General;
   const pages = [];
   for (let i = 0; i < count; i++) {
     const scene = i === 0 ? matched : allowed[(i - 1 + (seed % allowed.length)) % allowed.length];
     const base = SCENES[scene] || SCENES.flower;
     const suffix = variants[(i + Math.floor(seed / 7)) % variants.length];
-    const pageTitle = i === 0 ? base.title : base.title + " " + suffix;
+    const pageTitle = base.title + " " + suffix;
     pages.push({title: pageTitle, scene, extras: extras[i % extras.length], note: base.title + " " + suffix + "."});
   }
   return pages;
