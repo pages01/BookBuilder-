@@ -80,6 +80,53 @@
     .small-print{color:#999187;font-size:10px;line-height:1.5;margin-top:12px}
     @media(max-width:800px){.layout{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr}.page-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{margin-bottom:26px}header{margin-bottom:30px}}
     @media(max-width:540px){.shell{width:min(100% - 22px,680px);padding-top:15px}.top-note{font-size:10px;padding:7px 9px}.brand{font-size:19px}.hero p{font-size:14px}.form-panel{padding:18px}.two-col{grid-template-columns:1fr 1fr;gap:10px}.side-stack{grid-template-columns:1fr}.page-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.preview-top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions button{flex:1}.preview-top h2{font-size:21px}h1{letter-spacing:-1.8px}.ai-card{padding:17px}}
+  
+    .top-actions{display:flex;align-items:center;gap:9px}
+    .library-open{border:1px solid var(--line);background:#fffefa;border-radius:12px;padding:9px 13px;font-size:12px;font-weight:850;color:var(--ink);display:flex;align-items:center;gap:7px}
+    .library-open .count{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;background:var(--pink2);border-radius:99px;color:#a94b42;font-size:10px}
+    .library-overlay{position:fixed;inset:0;background:#211f1db8;z-index:30;display:none;align-items:flex-start;justify-content:flex-end;padding:12px}
+    .library-overlay.open{display:flex}
+    .library-drawer{width:min(470px,100%);height:min(850px,calc(100dvh - 24px));background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 90px #0003;display:flex;flex-direction:column;overflow:hidden}
+    .library-header{padding:18px 18px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .library-header h2{margin:0;font-size:20px;letter-spacing:-.6px}
+    .library-header p{margin:4px 0 0;color:var(--muted);font-size:11px}
+    .library-close{border:1px solid var(--line);background:white;border-radius:10px;width:36px;height:36px;font-size:19px}
+    .library-tools{padding:12px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .library-tools span{color:var(--muted);font-size:11px}
+    .library-list{padding:0 14px 18px;overflow:auto;display:grid;gap:10px}
+    .library-empty{padding:35px 18px;border:1px dashed #d8d0c4;border-radius:16px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5}
+    .library-item{display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;padding:10px;border:1px solid var(--line);background:#fffefa;border-radius:15px}
+    .library-thumb{width:76px;height:96px;object-fit:contain;border:1px solid #eee7dd;border-radius:8px;background:white}
+    .library-item h3{font-size:13px;margin:2px 0 5px;overflow-wrap:anywhere}
+    .library-item p{font-size:10px;color:var(--muted);margin:0 0 9px;line-height:1.4}
+    .library-item-actions{display:flex;gap:7px;flex-wrap:wrap}
+    .library-item-actions button{font-size:10px;padding:7px 9px;border-radius:8px}
+    .delete-design{color:#a34840}
+    .field select{appearance:auto}
+    .build-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .build-option{position:relative}
+    .build-option input{position:absolute;opacity:0;pointer-events:none}
+    .build-option label{display:block;border:1px solid var(--line);border-radius:12px;padding:11px 10px;background:#fff;cursor:pointer;min-height:78px}
+    .build-option label strong{display:block;font-size:12px;margin-bottom:4px}
+    .build-option label span{display:block;font-size:10px;line-height:1.4;color:var(--muted);font-weight:500}
+    .build-option input:checked+label{border-color:#f18c80;background:#fff4f1;box-shadow:0 0 0 2px #ff786b22}
+    .build-help{font-size:11px;line-height:1.5;color:var(--muted);margin-top:8px}
+    .model-research{margin-top:12px;padding:11px 12px;border-radius:11px;background:#fff9e9;border:1px solid #f1e5c7;color:#6c5d3f;font-size:10px;line-height:1.5}
+    .build-progress{height:7px;border-radius:99px;background:#eee8df;overflow:hidden;display:none;margin-top:12px}
+    .build-progress span{display:block;width:0;height:100%;background:var(--pink);transition:width .2s}
+    @media(max-width:540px){
+      header{align-items:flex-start}
+      .top-actions{flex-direction:column;align-items:flex-end}
+      .library-open{padding:8px 10px;font-size:11px}
+      .top-note{font-size:9px;white-space:nowrap}
+      .build-options{gap:6px}
+      .build-option label{padding:10px 8px}
+      .build-option label strong{font-size:11px}
+      .build-option label span{font-size:9px}
+      .library-overlay{padding:0;align-items:stretch}
+      .library-drawer{height:100dvh;width:100%;max-height:100dvh;border-radius:0;border:0}
+    }
+
   </style>
 </head>
 <body>
@@ -91,8 +138,25 @@
         </div>
         <span>DoodlePress</span>
       </div>
-      <div class="top-note">✦ Private, on-device studio</div>
+      <div class="top-actions">
+        <button class="library-open" id="libraryOpen" type="button" aria-haspopup="dialog" aria-controls="libraryOverlay">
+          <span aria-hidden="true">▤</span> My library <span class="count" id="libraryCount">0</span>
+        </button>
+        <div class="top-note">✦ Private, on-device studio</div>
+      </div>
     </header>
+
+    <div class="library-overlay" id="libraryOverlay" role="dialog" aria-modal="true" aria-labelledby="libraryTitle">
+      <section class="library-drawer">
+        <div class="library-header">
+          <div><h2 id="libraryTitle">Your library</h2><p>Your previous coloring books, saved on this device.</p></div>
+          <button class="library-close" id="libraryClose" type="button" aria-label="Close library">×</button>
+        </div>
+        <div class="library-tools"><span id="librarySummary">No saved designs yet</span><button class="secondary" id="clearLibrary" type="button">Clear library</button></div>
+        <div class="library-list" id="libraryList"><div class="library-empty">Your creations will appear here after you build your first coloring book.</div></div>
+      </section>
+    </div>
+
 
     <section class="hero">
       <div class="eyebrow"><span>✦</span> A little creativity goes a long way</div>
@@ -127,6 +191,16 @@
               </select>
             </div>
           </div>
+          <div class="field">
+            <label>Build time &amp; detail</label>
+            <div class="build-options">
+              <div class="build-option"><input type="radio" id="buildQuick" name="buildTime" value="quick"><label for="buildQuick"><strong>Quick</strong><span>Simple clean scenes</span></label></div>
+              <div class="build-option"><input type="radio" id="buildBalanced" name="buildTime" value="balanced" checked><label for="buildBalanced"><strong>Balanced</strong><span>Extra props and scenery</span></label></div>
+              <div class="build-option"><input type="radio" id="buildDetailed" name="buildTime" value="detailed"><label for="buildDetailed"><strong>Detailed</strong><span>More layers and little details</span></label></div>
+            </div>
+            <div class="build-help">More build effort adds richer backgrounds and extra objects to each page. Actual time depends on page count and device speed.</div>
+          </div>
+          <div class="build-progress" id="buildProgress"><span id="buildProgressBar"></span></div>
           <button id="createButton" class="primary" type="submit">Create my coloring book <span aria-hidden="true">→</span></button>
           <div class="small-print">You can create a book immediately with the built-in local art engine. Downloading the planner adds AI-generated page ideas.</div>
         </form>
@@ -140,6 +214,7 @@
           <div class="progress" id="modelProgress"><span id="modelProgressBar"></span></div>
           <div class="progress-label" id="modelProgressLabel">The model is only downloaded when you tap the button.</div>
           <div class="small-print">After setup, planning can run without sending your book idea to a server. Your browser may remove cached model files to free space.</div>
+          <div class="model-research"><strong>Next image model candidate: SD-Turbo (about 2.4 GB).</strong> This is a real text-to-image model, but full WebGPU memory use and iPhone Safari performance need device testing before enabling it. DoodlePress currently uses its printable vector engine for reliable pages.</div>
         </section>
         <section class="panel facts">
           <div class="fact"><div class="fact-icon" style="background:var(--pink2)">✎</div><div><strong>Made for coloring</strong><span>Bold outlines, roomy shapes, no color, and no busy backgrounds.</span></div></div>
