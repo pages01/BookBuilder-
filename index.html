@@ -488,21 +488,78 @@ function parseModelPages(text, fallback, count) {
 }
 
 let plannerPromise = null;
+let plannerPromiseModelId = null;
+let plannerModelId = null;
+let plannerDtype = null;
+function getSelectedHelperModel() {
+  const key = localStorage.getItem(HELPER_PREFERENCE_KEY) || "lfm";
+  return HELPER_MODELS[key] ? key : "lfm";
+}
+function syncAiSettings() {
+  const selected = getSelectedHelperModel();
+  document.querySelectorAll('input[name="helperModel"]').forEach(input => {
+    const active = input.value === selected;
+    input.checked = active;
+    input.closest(".model-option")?.classList.toggle("selected", active);
+  });
+  $("helperSelectionState").textContent = HELPER_MODELS[selected].name + " selected";
+  $("aiHelperStatus").textContent = plannerModelId === HELPER_MODELS[selected].id
+    ? HELPER_MODELS[selected].name + " is loaded and ready in this tab."
+    : "Selected: " + HELPER_MODELS[selected].name + ". It will load when the page opens or you press Prepare selected.";
+}
+function closeAiSettings() {
+  $("aiOverlay").classList.remove("open");
+  document.body.style.overflow = "";
+}
+function openAiSettings() {
+  syncAiSettings();
+  $("aiOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+async function clearHelperCache() {
+  const record = JSON.parse(localStorage.getItem("doodlepress-active-planner") || "null");
+  if (!record || !record.id) { toast("There are no saved helper files recorded by DoodlePress."); return; }
+  $("removeHelperButton").disabled = true;
+  try {
+    const {ModelRegistry} = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0");
+    if (!ModelRegistry || typeof ModelRegistry.clear_pipeline_cache !== "function") throw new Error("This model manager cannot remove the cached files.");
+    await ModelRegistry.clear_pipeline_cache("text-generation",record.id,{dtype:record.dtype || "q4"});
+    planner = null;
+    plannerModelId = null;
+    plannerDtype = null;
+    localStorage.removeItem("doodlepress-active-planner");
+    modelStatus.textContent = "NOT INSTALLED";
+    modelProgressLabel.textContent = "Saved helper files removed. Prepare the selected helper to download it again.";
+    $("aiHelperStatus").textContent = "Saved helper files removed from the DoodlePress model cache.";
+    toast("Saved helper files removed.");
+  } catch(error) { toast(error.message || "Could not remove the saved helper."); }
+  finally { $("removeHelperButton").disabled = false; }
+}
 async function loadPlanner() {
-  if (planner) return planner;
-  if (plannerPromise) return plannerPromise;
+  const selectedKey = getSelectedHelperModel();
+  const selectedModel = HELPER_MODELS[selectedKey];
+  const modelId = selectedModel.id;
+  if (planner && plannerModelId === modelId) return planner;
+  if (plannerPromise) {
+    if (plannerPromiseModelId === modelId) return plannerPromise;
+    await plannerPromise.catch(() => {});
+    if (planner && plannerModelId === modelId) return planner;
+  }
+  planner = null;
+  plannerModelId = null;
+  plannerDtype = null;
+  plannerPromiseModelId = modelId;
   plannerPromise = (async () => {
     modelStatus.textContent = "PREPARING";
     modelStatus.style.background = "";
     modelStatus.style.color = "";
     modelStatus.style.borderColor = "";
-    setModelProgress(1, "Choosing the best local setup for this browser…");
+    setModelProgress(1,"Preparing " + selectedModel.name + " for this browser…");
     try {
-      const { pipeline, env, ModelRegistry } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0");
+      const {pipeline,env,ModelRegistry} = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0");
       env.allowLocalModels = false;
       env.useBrowserCache = true;
       env.useWasmCache = true;
-      // Keep one stable Transformers.js cache so repeat visits reuse the same files.
       env.cacheKey = "transformers-cache";
       let device = null;
       let dtype = "q4";
@@ -512,55 +569,50 @@ async function loadPlanner() {
           if (adapter) { device = "webgpu"; dtype = "q4f16"; }
         } catch (_) {}
       }
-      setModelProgress(3, "Preparing the local planner…");
-      const modelOptions = {dtype,
-        progress_callback: (info) => {
-          if (info && typeof info.progress === "number") {
-            const label = info.file ? "Downloading " + info.file : "Preparing local model files…";
-            setModelProgress(info.progress, label);
-          } else if (info && info.status) {
-            setModelProgress(10, info.status);
-          }
-        }
-      };
+      const modelOptions = {dtype,progress_callback:(info) => {
+        if (info && typeof info.progress === "number") {
+          setModelProgress(info.progress,info.file ? "Downloading " + info.file : "Preparing local model files…");
+        } else if (info && info.status) setModelProgress(10,info.status);
+      }};
       if (device) modelOptions.device = device;
       let alreadyCached = false;
+      try { alreadyCached = !!(ModelRegistry && await ModelRegistry.is_pipeline_cached("text-generation",modelId,{dtype})); } catch (_) {}
+      setModelProgress(3,alreadyCached ? "Found " + selectedModel.name + " saved on this device. Loading it…" : "Preparing " + selectedModel.name + " for its first use…");
+      planner = await pipeline("text-generation",modelId,modelOptions);
+      const recordKey = "doodlepress-active-planner";
       try {
-        alreadyCached = !!(ModelRegistry && await ModelRegistry.is_pipeline_cached("text-generation", MODEL_ID, {dtype}));
-      } catch (_) {}
-      setModelProgress(3, alreadyCached ? "Found the saved model on this device. Loading it without downloading again…" : "Preparing the local planner for its first use…");
-      planner = await pipeline("text-generation", MODEL_ID, modelOptions);
-      // Remove only the previous DoodlePress model, never unrelated browser caches.
-      const modelRecordKey = "doodlepress-active-planner";
-      try {
-        const previous = JSON.parse(localStorage.getItem(modelRecordKey) || "null");
-        if (previous && previous.id && (previous.id !== MODEL_ID || previous.dtype !== dtype) &&
+        const previous = JSON.parse(localStorage.getItem(recordKey) || "null");
+        if (previous && previous.id && (previous.id !== modelId || previous.dtype !== dtype) &&
             ModelRegistry && typeof ModelRegistry.clear_pipeline_cache === "function") {
-          await ModelRegistry.clear_pipeline_cache("text-generation", previous.id, {dtype: previous.dtype || "q4"});
+          await ModelRegistry.clear_pipeline_cache("text-generation",previous.id,{dtype:previous.dtype || "q4"});
         }
-        localStorage.setItem(modelRecordKey, JSON.stringify({id:MODEL_ID,dtype}));
-      } catch (cleanupError) {
-        console.warn("Could not clean up a previous DoodlePress model cache.", cleanupError);
-      }
+        localStorage.setItem(recordKey,JSON.stringify({id:modelId,dtype}));
+        localStorage.setItem(HELPER_PREFERENCE_KEY,selectedKey);
+      } catch(cleanupError) { console.warn("Could not clean up a previous DoodlePress model cache.",cleanupError); }
+      plannerModelId = modelId;
+      plannerDtype = dtype;
       modelStatus.textContent = "READY";
       modelStatus.style.background = "#e5f6e9";
       modelStatus.style.color = "#315744";
       modelStatus.style.borderColor = "#cde9d5";
       modelProgressBar.style.width = "100%";
-      modelProgressLabel.textContent = "Your local planner is ready. Model files are cached by the browser for future visits.";
+      modelProgressLabel.textContent = selectedModel.name + " is ready. Model files are cached by the browser for future visits.";
+      syncAiSettings();
       return planner;
-    } catch (error) {
+    } catch(error) {
       planner = null;
+      plannerModelId = null;
       modelStatus.textContent = "RETRY NEEDED";
       modelProgressLabel.textContent = (error && error.message ? error.message : "The local model could not be prepared.") + " You can still create books with the built-in page planner.";
+      $("aiHelperStatus").textContent = selectedModel.name + " could not be loaded. The built-in page planner will still work.";
       throw error;
     } finally {
       plannerPromise = null;
+      plannerPromiseModelId = null;
     }
   })();
   return plannerPromise;
 }
-
 async function askPlanner(title, description, category, count, fallback, buildTime) {
   if (!planner) return fallback;
   const allowed = (CATEGORY_SCENES[category] || CATEGORY_SCENES.General).join(", ");
