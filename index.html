@@ -218,40 +218,41 @@
         </div>
         <div class="ai-settings-content">
           <section class="ai-group">
-            <div class="ai-group-heading"><h3>Image generation</h3><span class="model-pill active">DEFAULT</span></div>
-            <p class="ai-explain">DoodlePress Vector Art is the built-in drawing engine. It creates crisp printable line art instantly, with no model download or internet connection required.</p>
-            <div class="model-choice-list" id="imageModelChoices">
-              <label class="model-option selected" for="imageVector"><input type="radio" name="imageModel" id="imageVector" value="vector" checked><span class="model-radio-dot"></span><div class="model-copy"><strong>DoodlePress Vector Art</strong><span>Instant built-in SVG line art · Crisp print quality · Works offline · No WebGPU or large download required.</span></div><span class="model-pill active">READY</span></label>
+            <div class="ai-group-heading"><h3>Image generator</h3><span class="model-pill active">2 MODES</span></div>
+            <p class="ai-explain">Choose how DoodlePress creates each page. Both methods are processed on this device after any required model files are downloaded.</p>
+            <div class="model-choice-list" id="imageModeChoices">
+              <label class="model-option" for="imageTrace">
+                <input type="radio" name="imageMode" id="imageTrace" value="trace">
+                <span class="model-radio-dot"></span>
+                <div class="model-copy"><strong>DoodlePress ImageTrace</strong><span>Finds reusable CC0/public-domain images, then converts each one into clean black outlines with a small local line-art model. Internet is needed to find source images.</span></div>
+                <span class="model-pill">17 MB MODEL</span>
+              </label>
+              <label class="model-option selected" for="imageSketch">
+                <input type="radio" name="imageMode" id="imageSketch" value="text" checked>
+                <span class="model-radio-dot"></span>
+                <div class="model-copy"><strong>DoodlePress SketchForge</strong><span>Creates new outline drawings directly from your page descriptions. The local Storybook Director generates vector shapes; no source image or extra image-model download is needed.</span></div>
+                <span class="model-pill active">TEXT TO ART</span>
+              </label>
             </div>
-            <div class="ai-control-row"><span id="imageSelectionState">DoodlePress Vector Art selected</span></div>
-            <div class="ai-storage-note" id="imageModelStatus">Your default image engine is ready immediately. No setup is needed.</div>
+            <div class="ai-control-row"><button class="secondary" id="loadLineArtButton" type="button">Prepare ImageTrace model</button></div>
+            <div class="ai-storage-note" id="imageModelStatus">SketchForge is selected. It uses the local Storybook Director.</div>
           </section>
-
           <section class="ai-group">
-            <div class="ai-group-heading"><h3>Helper AI · page planner</h3><span class="model-pill active">2 MODELS</span></div>
-            <p class="ai-explain">The helper plans distinct page ideas and scenes. It does not draw the pictures. Choose the model that fits your device.</p>
-            <div class="model-choice-list" id="helperChoices">
-              <label class="model-option selected" for="helperLfm">
-                <input type="radio" name="helperModel" id="helperLfm" value="lfm" checked>
-                <span class="model-radio-dot"></span>
-                <div class="model-copy"><strong>LFM2.5-350M · Lightweight</strong><span>About 276 MB. Smaller download and a good default for phones and quick planning.</span></div>
-                <span class="model-pill" id="lfmState">DEFAULT</span>
-              </label>
-              <label class="model-option" for="helperQwen">
-                <input type="radio" name="helperModel" id="helperQwen" value="qwen">
-                <span class="model-radio-dot"></span>
-                <div class="model-copy"><strong>Qwen3-0.6B · Advanced</strong><span>About 570 MB with WebGPU or 920 MB with the CPU model. A larger helper for more varied page planning, with a higher memory cost.</span></div>
-                <span class="model-pill">LARGER</span>
-              </label>
+            <div class="ai-group-heading"><h3>AI organizer</h3><span class="model-pill active">1 MODEL</span></div>
+            <p class="ai-explain">One custom-tuned organizer handles page planning, image search terms, and direct vector drawing. There are no alternative model selectors.</p>
+            <div class="model-option selected">
+              <span class="model-radio-dot"></span>
+              <div class="model-copy"><strong>DoodlePress Storybook Director</strong><span>Built on LFM2.5-350M · about 276 MB · plans distinct pages and writes safe, printable outline instructions.</span></div>
+              <span class="model-pill active">DEFAULT</span>
             </div>
             <div class="ai-control-row">
-              <span id="helperSelectionState">LFM2.5-350M selected</span>
-              <button class="secondary" id="loadHelperButton" type="button">Prepare selected</button>
-              <button class="secondary delete-design" id="removeHelperButton" type="button">Remove saved helper</button>
+              <span id="helperSelectionState">DoodlePress Storybook Director</span>
+              <button class="secondary" id="loadHelperButton" type="button">Prepare organizer</button>
+              <button class="secondary delete-design" id="removeHelperButton" type="button">Remove saved organizer</button>
             </div>
-            <div class="ai-storage-note" id="aiHelperStatus">The selected helper is prepared automatically when DoodlePress opens. Downloaded files stay in this browser cache until the browser clears them or you remove the saved helper.</div>
+            <div class="ai-storage-note" id="aiHelperStatus">The organizer downloads automatically and is cached by this browser for later visits.</div>
           </section>
-          <div class="notice"><strong>Privacy:</strong> Page planning and image generation run locally in your browser. The first neural-model setup needs internet access to download model files. Generated books stay in your local library.</div>
+          <div class="notice"><strong>Privacy and image rights:</strong> SketchForge draws from your text locally. ImageTrace searches Openverse online and requests only CC0 and public-domain-marked images, then converts the chosen image locally. Openverse license labels can be incomplete or incorrect, so verify each source before commercial use.</div>
         </div>
       </section>
     </div>
@@ -333,20 +334,20 @@
       <div class="small-print">Tip: On iPhone, use the Share menu after the PDF opens and choose Save to Files. Printing is easiest on US Letter paper.</div>
     </section>
 
-    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Helper AI: LFM2.5-350M or Qwen3-0.6B · Artwork: DoodlePress Vector Art</div>
+    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Organizer: DoodlePress Storybook Director · Artwork: ImageTrace or SketchForge</div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module">
 const HELPER_MODELS = {
-  lfm: {id:"onnx-community/LFM2.5-350M-ONNX", name:"LFM2.5-350M", size:"about 276 MB", detail:"Small and quick. Best for a lighter download and everyday page planning."},
-  qwen: {id:"onnx-community/Qwen3-0.6B-ONNX", name:"Qwen3-0.6B", size:"about 570–920 MB", detail:"A larger helper with more room for varied page ideas. It needs more storage and memory."}
+  director: {id:"onnx-community/LFM2.5-350M-ONNX", name:"DoodlePress Storybook Director", size:"about 276 MB", detail:"One compact on-device organizer for planning, image searches, and vector outline generation."}
 };
 const HELPER_PREFERENCE_KEY = "doodlepress-helper-model";
-const IMAGE_MODELS = {
-  vector:{id:"vector",name:"DoodlePress Vector Art"}
+const IMAGE_MODES = {
+  trace:{id:"trace",name:"DoodlePress ImageTrace",detail:"Finds CC0/public-domain source images and converts them into printable outlines."},
+  text:{id:"text",name:"DoodlePress SketchForge",detail:"Generates new vector outline art directly from the page prompt."}
 };
-const IMAGE_PREFERENCE_KEY = "doodlepress-image-model";
+const IMAGE_PREFERENCE_KEY = "doodlepress-image-mode";
 let planner = null;
 let imageWorker = null;
 let imageRequestCounter = 0;
@@ -523,26 +524,28 @@ function extractModelText(output) {
   }
   return typeof value === "string" ? value : "";
 }
-function parseModelPages(text, fallback, count) {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start < 0 || end <= start) return fallback;
+function parseModelPages(text,fallback,count) {
+  const start=text.indexOf("{"),end=text.lastIndexOf("}");
+  if(start<0 || end<=start) return fallback;
   try {
-    const parsed = JSON.parse(text.slice(start, end + 1));
-    if (!parsed || !Array.isArray(parsed.pages)) return fallback;
-    const used = parsed.pages.map((item, i) => {
-      const scene = SCENES[item.scene] ? item.scene : fallback[i % fallback.length].scene;
-      const base = SCENES[scene];
-      const allowedExtras = ["flower","cloud","star","heart","bubble","leaf","sun"];
-      const extras = Array.isArray(item.extras) ? item.extras.filter(x => allowedExtras.includes(x)).slice(0,4) : [];
-      return {scene, title: safeText(item.title, 42) || base.title, extras, note: "A simple " + base.title.toLowerCase() + " scene to color."};
+    const parsed=JSON.parse(text.slice(start,end+1));
+    if(!parsed || !Array.isArray(parsed.pages)) return fallback;
+    const allowedExtras=["flower","cloud","star","heart","bubble","leaf","sun"];
+    const used=parsed.pages.map((item,i)=>{
+      const scene=SCENES[item.scene] ? item.scene : fallback[i%fallback.length].scene;
+      const base=SCENES[scene];
+      const extras=Array.isArray(item.extras) ? item.extras.filter(x=>allowedExtras.includes(x)).slice(0,4) : [];
+      const title=safeText(item.title,42) || base.title;
+      return {
+        scene,title,extras,
+        imageQuery:safeText(item.imageQuery || (title+" "+base.title+" "+base.group),100),
+        note:"A simple "+base.title.toLowerCase()+" scene to color."
+      };
     });
-    if (used.length < count * 0.6) return fallback;
-    while (used.length < count) used.push(fallback[used.length % fallback.length]);
-    return used.slice(0, count);
-  } catch (_) {
-    return fallback;
-  }
+    if(used.length<count*0.6) return fallback;
+    while(used.length<count) used.push({...fallback[used.length%fallback.length]});
+    return used.slice(0,count);
+  } catch(_) { return fallback; }
 }
 
 let plannerPromise = null;
@@ -550,28 +553,29 @@ let plannerPromiseModelId = null;
 let plannerModelId = null;
 let plannerDtype = null;
 function getSelectedHelperModel() {
-  const key = localStorage.getItem(HELPER_PREFERENCE_KEY) || "lfm";
-  return HELPER_MODELS[key] ? key : "lfm";
+  return "director";
 }
-function getSelectedImageModel() {
-  const key = localStorage.getItem(IMAGE_PREFERENCE_KEY) || "vector";
-  return IMAGE_MODELS[key] ? key : "vector";
+function getSelectedImageMode() {
+  const saved = localStorage.getItem(IMAGE_PREFERENCE_KEY) || "text";
+  return IMAGE_MODES[saved] ? saved : "text";
 }
 function syncImageSettings() {
-  const selected = getSelectedImageModel();
-  document.querySelectorAll('input[name="imageModel"]').forEach(input => {
+  const selected = getSelectedImageMode();
+  document.querySelectorAll('input[name="imageMode"]').forEach(input => {
     const active = input.value === selected;
     input.checked = active;
     input.closest(".model-option")?.classList.toggle("selected",active);
   });
-  $("imageSelectionState").textContent = IMAGE_MODELS[selected].name + " selected";
-  $("imageModelStatus").textContent = selected === "vector"
-    ? "Vector Art is ready immediately. No download or WebGPU is needed."
-    : IMAGE_MODELS[selected].name + " is ready.";
+  const ready = imageModelLoaded === "lineart";
+  $("imageModelStatus").textContent = selected === "trace"
+    ? (ready
+        ? "ImageTrace is selected. Its line-art model is downloaded and ready; image search uses Openverse."
+        : "ImageTrace is selected. Its small line-art model will download automatically; Openverse search needs internet.")
+    : "SketchForge is selected. It generates new vector outlines with the local Storybook Director.";
 }
 function getImageWorker() {
   if (imageWorker) return imageWorker;
-  imageWorker = new Worker("./image-worker.js?v=1",{type:"module"});
+  imageWorker = new Worker("./image-worker.js?v=2",{type:"module"});
   imageWorker.addEventListener("message",event => {
     const message = event.data || {};
     const pending = imageRequests.get(message.id);
@@ -595,60 +599,131 @@ function imageWorkerRequest(type,payload={},onProgress) {
   });
 }
 async function prepareImageModel() {
-  const selected = getSelectedImageModel();
-  if (selected === "vector" || imageModelLoaded === selected) return true;
-  if (!navigator.gpu) throw new Error("This browser does not expose WebGPU. Choose Vector Art or use a WebGPU-compatible browser.");
-  $("prepareImageButton").disabled = true;
-  $("imageModelStatus").textContent = "Starting " + IMAGE_MODELS[selected].name + "…";
+  if (imageModelLoaded === "lineart") return true;
+  $("imageModelStatus").textContent = "Downloading the DoodlePress ImageTrace line-art model…";
+  const button = $("loadLineArtButton");
+  if (button) button.disabled = true;
   try {
-    const response = await imageWorkerRequest("load",{model:selected},progress => {
+    const response = await imageWorkerRequest("load",{},progress => {
       const pct = typeof progress.pct === "number" ? " " + Math.round(progress.pct) + "%" : "";
-      $("imageModelStatus").textContent = (progress.message || progress.phase || "Loading model") + pct;
+      $("imageModelStatus").textContent = (progress.message || progress.phase || "Preparing ImageTrace") + pct;
     });
-    if (!response.result?.ok) throw new Error(response.result?.message || "Image model failed to load.");
-    imageModelLoaded = selected;
+    if (!response.result?.ok) throw new Error(response.result?.message || "ImageTrace could not load.");
+    imageModelLoaded = "lineart";
     syncImageSettings();
     return true;
-  } finally { $("prepareImageButton").disabled = false; }
-}
-async function unloadImageModel() {
-  if (!imageWorker || !imageModelLoaded) { $("imageModelStatus").textContent = "No neural image model is loaded."; return; }
-  await imageWorkerRequest("unload");
-  imageModelLoaded = null;
-  syncImageSettings();
-}
-async function clearSdTurboCache() {
-  if (getSelectedImageModel() !== "sd-turbo") return;
-  $("clearImageCacheButton").disabled = true;
-  try {
-    if (imageModelLoaded === "sd-turbo") await unloadImageModel();
-    await imageWorkerRequest("purge",{model:"sd-turbo"});
-    $("imageModelStatus").textContent = "SD-Turbo's DoodlePress cache was cleared. It will download again next time.";
-    toast("SD-Turbo cache cleared.");
-  } catch(error) { toast(error.message || "Could not clear the SD-Turbo cache."); }
-  finally { $("clearImageCacheButton").disabled = false; syncImageSettings(); }
-}
-async function blobToOutlineDataUrl(blob) {
-  const bitmap = await createImageBitmap(blob);
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = 512;
-  const ctx = canvas.getContext("2d",{willReadFrequently:true});
-  if (!ctx) throw new Error("Could not prepare the generated coloring-page image.");
-  ctx.fillStyle="#fff"; ctx.fillRect(0,0,512,512);
-  const scale=Math.min(512/bitmap.width,512/bitmap.height),w=bitmap.width*scale,h=bitmap.height*scale;
-  ctx.drawImage(bitmap,(512-w)/2,(512-h)/2,w,h); bitmap.close?.();
-  const image=ctx.getImageData(0,0,512,512),src=image.data,gray=new Uint8Array(512*512);
-  for(let i=0,p=0;i<src.length;i+=4,p++) gray[p]=Math.round(.299*src[i]+.587*src[i+1]+.114*src[i+2]);
-  const out=ctx.createImageData(512,512),dst=out.data;
-  for(let y=1;y<511;y++) for(let x=1;x<511;x++){
-    const p=y*512+x;
-    const gx=-gray[p-513]+gray[p-511]-2*gray[p-1]+2*gray[p+1]-gray[p+511]+gray[p+513];
-    const gy=-gray[p-513]-2*gray[p-512]-gray[p-511]+gray[p+511]+2*gray[p+512]+gray[p+513];
-    const ink=Math.sqrt(gx*gx+gy*gy)>115?0:255,q=p*4;
-    dst[q]=dst[q+1]=dst[q+2]=ink;dst[q+3]=255;
+  } finally {
+    if (button) button.disabled = false;
   }
-  ctx.putImageData(out,0,0);
-  return canvas.toDataURL("image/png");
+}
+async function blobToDataUrl(blob) {
+  return new Promise((resolve,reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("The generated outline could not be saved."));
+    reader.readAsDataURL(blob);
+  });
+}
+async function fetchOpenverseImage(query,usedIds) {
+  const params = new URLSearchParams({q:query,license:"cc0,pdm",page_size:"20",mature:"false"});
+  const response = await fetch("https://api.openverse.org/v1/images/?" + params.toString(), {
+    headers:{Accept:"application/json"},credentials:"omit"
+  });
+  if (!response.ok) throw new Error("Openverse image search returned " + response.status + ".");
+  const data = await response.json();
+  const candidates = (data.results || [])
+    .filter(item => ["cc0","pdm"].includes(String(item.license || "").toLowerCase()))
+    .filter(item => item.id && !usedIds.has(String(item.id)) && (item.url || item.thumbnail))
+    .sort((a,b) => (Number(b.width || 0)*Number(b.height || 0))-(Number(a.width || 0)*Number(a.height || 0)));
+  for (const item of candidates) {
+    for (const imageUrl of [...new Set([item.url,item.thumbnail].filter(Boolean))]) {
+      try {
+        const imageResponse = await fetch(imageUrl,{mode:"cors",credentials:"omit"});
+        if (!imageResponse.ok) continue;
+        const contentType=imageResponse.headers.get("content-type") || "";
+        const length=Number(imageResponse.headers.get("content-length") || 0);
+        if ((contentType && !contentType.toLowerCase().startsWith("image/")) || length>15*1024*1024) continue;
+        const blob=await imageResponse.blob();
+        if (!blob.type.startsWith("image/") || blob.size>15*1024*1024) continue;
+        usedIds.add(String(item.id));
+        return {blob,source:{
+          id:String(item.id),title:safeText(item.title || "Untitled source image",140),
+          creator:safeText(item.creator || "Creator not listed",100),
+          license:String(item.license || "").toLowerCase(),licenseUrl:item.license_url || "",
+          sourceUrl:item.url || "",landingUrl:item.foreign_landing_url || "",
+          provider:safeText(item.provider || "",60)
+        }};
+      } catch (_) {}
+    }
+  }
+  throw new Error("No reusable image could be downloaded for: " + query);
+}
+async function findImageForPage(book,page,usedIds) {
+  const queries=[
+    safeText(page.imageQuery || "",100),
+    safeText(page.title + " " + book.category + " illustration",100),
+    safeText(page.title,80)
+  ].filter((query,index,all)=>query && all.indexOf(query)===index);
+  let lastError=null;
+  for(const query of queries) {
+    try { return await fetchOpenverseImage(query,usedIds); }
+    catch(error) { lastError=error; }
+  }
+  throw lastError || new Error("No suitable source image was found.");
+}
+function svgNumber(value,minimum=0,maximum=512) {
+  const number=Number(value);
+  if(!Number.isFinite(number)) return null;
+  return String(Math.max(minimum,Math.min(maximum,number)));
+}
+function makeGeneratedArtMarkup(spec) {
+  if(!spec || !Array.isArray(spec.shapes) || spec.shapes.length<5) return null;
+  const safePath=/^[MmLlHhVvCcSsQqTtAaZz0-9eE.,+\-\s]+$/;
+  const safePoints=/^[0-9eE.,+\-\s]+$/;
+  const markup=[];
+  for(const shape of spec.shapes.slice(0,42)) {
+    if(!shape || typeof shape!=="object") continue;
+    const type=String(shape.type || "").toLowerCase();
+    const strokeWidth=Math.max(2,Math.min(11,Number(shape.strokeWidth)||6));
+    const fill=["none","white","black"].includes(String(shape.fill || "").toLowerCase()) ? String(shape.fill).toLowerCase() : "none";
+    const common=' stroke="#151515" stroke-width="'+strokeWidth+'" stroke-linecap="round" stroke-linejoin="round" fill="'+fill+'"';
+    if(type==="path" && typeof shape.d==="string" && shape.d.length<=1600 && safePath.test(shape.d)) {
+      markup.push('<path d="'+shape.d+'"'+common+'/>');
+    } else if(type==="circle") {
+      const cx=svgNumber(shape.cx),cy=svgNumber(shape.cy),r=svgNumber(shape.r,1,256);
+      if(cx!==null && cy!==null && r!==null) markup.push('<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'"'+common+'/>');
+    } else if(type==="ellipse") {
+      const cx=svgNumber(shape.cx),cy=svgNumber(shape.cy),rx=svgNumber(shape.rx,1,256),ry=svgNumber(shape.ry,1,256);
+      if(cx!==null && cy!==null && rx!==null && ry!==null) markup.push('<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'"'+common+'/>');
+    } else if(type==="rect") {
+      const x=svgNumber(shape.x),y=svgNumber(shape.y),width=svgNumber(shape.width,1,512),height=svgNumber(shape.height,1,512),rx=svgNumber(shape.rx||0,0,80);
+      if(x!==null && y!==null && width!==null && height!==null && rx!==null) markup.push('<rect x="'+x+'" y="'+y+'" width="'+width+'" height="'+height+'" rx="'+rx+'"'+common+'/>');
+    } else if(type==="line") {
+      const x1=svgNumber(shape.x1),y1=svgNumber(shape.y1),x2=svgNumber(shape.x2),y2=svgNumber(shape.y2);
+      if([x1,y1,x2,y2].every(value=>value!==null)) markup.push('<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'"'+common+'/>');
+    } else if((type==="polyline" || type==="polygon") && typeof shape.points==="string" && shape.points.length<=1200 && safePoints.test(shape.points)) {
+      markup.push('<'+type+' points="'+shape.points+'"'+common+'/>');
+    }
+  }
+  return markup.length>=5 ? markup.join("") : null;
+}
+const SKETCHFORGE_INSTRUCTIONS = "You are DoodlePress SketchForge, a vector illustrator for printable children's coloring books. Draw a complete original scene from the user's description. Return only strict JSON, no markdown and no XML. The schema is {\"shapes\":[{\"type\":\"path\",\"d\":\"M...\",\"strokeWidth\":7,\"fill\":\"none\"},{\"type\":\"circle\",\"cx\":256,\"cy\":256,\"r\":40,\"strokeWidth\":7,\"fill\":\"white\"}]}. Allowed shape types: path, circle, ellipse, rect, line, polyline, polygon. Use only SVG path commands and numbers in path data. Coordinate space is 0 to 512 in both directions. Draw 8 to 20 well-composed shapes. Use thick black strokes, rounded joins, and white or no fills; tiny black fills are allowed only for eyes or tiny details. Make a large recognizable main subject, expressive friendly features, clear closed contours, and a few helpful background objects. Leave large open areas that children can color. Keep every important object inside the page. No text, letters, gradients, shading, hatching, gray fills, color, logos, borders, or watermarks. Avoid tiny clutter.";
+async function generateOutlineMarkup(book,page,index) {
+  if(!planner) return null;
+  const scene=SCENES[page.scene]?.title || page.scene || "a friendly character";
+  const prompt="Create one original coloring page drawing. Book: "+book.title+
+    ". Overall theme: "+book.description+". Page scene: "+page.title+
+    ". Main subject: "+scene+". Extra details: "+(page.extras||[]).join(", ")+
+    ". Detail level: "+book.buildTime+". Use a fresh composition and do not draw words or page numbers.";
+  const result=await planner([
+    {role:"system",content:SKETCHFORGE_INSTRUCTIONS},
+    {role:"user",content:prompt}
+  ],{max_new_tokens:620,do_sample:true,temperature:0.38,top_p:0.86});
+  const raw=extractModelText(result);
+  const start=raw.indexOf("{"),end=raw.lastIndexOf("}");
+  if(start<0 || end<=start) return null;
+  try { return makeGeneratedArtMarkup(JSON.parse(raw.slice(start,end+1))); }
+  catch(_) { return null; }
 }
 function buildImagePrompt(book,page) {
   const scene=SCENES[page.scene]?.title||page.scene||"a friendly character";
@@ -659,16 +734,10 @@ function buildImagePrompt(book,page) {
 }
 function syncAiSettings() {
   syncImageSettings();
-  const selected = getSelectedHelperModel();
-  document.querySelectorAll('input[name="helperModel"]').forEach(input => {
-    const active = input.value === selected;
-    input.checked = active;
-    input.closest(".model-option")?.classList.toggle("selected", active);
-  });
-  $("helperSelectionState").textContent = HELPER_MODELS[selected].name + " selected";
-  $("aiHelperStatus").textContent = plannerModelId === HELPER_MODELS[selected].id
-    ? HELPER_MODELS[selected].name + " is loaded and ready in this tab."
-    : "Selected: " + HELPER_MODELS[selected].name + ". It will load when the page opens or you press Prepare selected.";
+  $("helperSelectionState").textContent=HELPER_MODELS.director.name;
+  $("aiHelperStatus").textContent=plannerModelId===HELPER_MODELS.director.id
+    ? HELPER_MODELS.director.name+" is loaded and ready in this tab."
+    : "One local organizer model is used for all planning and SketchForge drawing. It downloads automatically on first use.";
 }
 function closeAiSettings() {
   $("aiOverlay").classList.remove("open");
@@ -776,23 +845,23 @@ async function loadPlanner() {
   })();
   return plannerPromise;
 }
-async function askPlanner(title, description, category, count, fallback, buildTime) {
-  if (!planner) return fallback;
-  const allowed = (CATEGORY_SCENES[category] || CATEGORY_SCENES.General).join(", ");
-  const detailInstruction = buildTime === "detailed"
+async function askPlanner(title,description,category,count,fallback,buildTime) {
+  if(!planner) return fallback;
+  const allowed=(CATEGORY_SCENES[category] || CATEGORY_SCENES.General).join(", ");
+  const detailInstruction=buildTime==="detailed"
     ? "Design rich scenes with several distinct props and a setting; choose 3 or 4 extras per page."
-    : buildTime === "balanced"
+    : buildTime==="balanced"
       ? "Design medium-detail scenes with a few props and a clear setting; choose 2 or 3 extras per page."
       : "Design uncluttered scenes with one main subject and one or two extras.";
-  const system = "You plan friendly children's coloring books. Output only valid JSON, no markdown. Use exactly the allowed scene IDs. Every idea must be cheerful, safe, and drawable as bold black outlines on white paper. No text inside pictures, no color, no scary scenes. Each page must have its own distinct action or setting. " + detailInstruction + " Extras must be chosen only from flower, cloud, star, heart, bubble, leaf, and sun. JSON format: {\"pages\":[{\"title\":\"Short page title\",\"scene\":\"one_allowed_id\",\"extras\":[\"flower\",\"cloud\"]}]}";
-  const user = "Book title: " + title + "\nDescription: " + description + "\nCategory: " + category + "\nMake exactly " + count + " varied coloring page ideas. Allowed scene IDs: " + allowed + ". Use only those IDs. Make page titles specific and do not repeat an idea. Return JSON only.";
-  const result = await planner([{role:"system",content:system},{role:"user",content:user}], {
-    max_new_tokens: Math.min(1200, 150 + count * 20),
-    do_sample: false,
-    temperature: 0.45
+  const system="You are DoodlePress Storybook Director. Plan a cheerful, coherent children's coloring book. Return only strict JSON, no markdown. Use exactly the allowed scene IDs. Every page must be distinct, safe, friendly, and easy to understand. "+
+    detailInstruction+" Extras must be chosen only from flower, cloud, star, heart, bubble, leaf, and sun. For each page, create a useful concise imageQuery describing a single recognizable object or scene that can be found as a reusable image. Keep the query literal and visual, not abstract. JSON format: {\"pages\":[{\"title\":\"Short page title\",\"scene\":\"one_allowed_id\",\"extras\":[\"flower\",\"cloud\"],\"imageQuery\":\"friendly kitten playing with yarn\"}]}";
+  const user="Book title: "+title+"\nDescription: "+description+"\nCategory: "+category+
+    "\nMake exactly "+count+" varied page ideas. Allowed scene IDs: "+allowed+
+    ". Use only those IDs. Do not repeat the main action. Keep every page suitable for a young children's coloring book. Return JSON only.";
+  const result=await planner([{role:"system",content:system},{role:"user",content:user}],{
+    max_new_tokens:Math.min(1600,180+count*30),do_sample:false,temperature:0.35
   });
-  const response = extractModelText(result);
-  return parseModelPages(response, fallback, count);
+  return parseModelPages(extractModelText(result),fallback,count);
 }
 
 function sceneArt(scene) {
@@ -898,24 +967,27 @@ function supportingObjects(page, category, index, buildTime) {
     .join("");
 }
 
-function makeSvg(page, index, total, bookTitle, category, buildTime) {
-  const scene = SCENES[page.scene] ? page.scene : "flower";
-  const title = safeText(page.title || SCENES[scene].title, 34);
-  const frame = '<rect x="24" y="24" width="752" height="952" rx="26" fill="white" stroke="#171717" stroke-width="5"/>';
-  const headerLine = '<path d="M95 192h610" fill="none" stroke="#171717" stroke-width="3" stroke-dasharray="5 13"/>';
-  const sparkles = '<path d="M130 230v-24m-12 12h24m485 15v-24m-12 12h24M150 700v-20m-10 10h20m470-20v-20m-10 10h20" stroke="#171717" stroke-width="6" stroke-linecap="round"/><circle cx="130" cy="390" r="8" fill="white" stroke="#171717" stroke-width="5"/><circle cx="670" cy="390" r="8" fill="white" stroke="#171717" stroke-width="5"/>';
-  const heading = title;
-  const subtitle = "";
-  const number = '<text x="400" y="932" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" fill="#171717">' + (index + 1) + ' / ' + total + '</text>';
-  const background = backgroundArt(category,index,buildTime);
-  const detailLines = buildTime === "detailed"
+function makeSvg(page,index,total,bookTitle,category,buildTime) {
+  const scene=SCENES[page.scene] ? page.scene : "flower";
+  const title=safeText(page.title || SCENES[scene].title,34);
+  const frame='<rect x="24" y="24" width="752" height="952" rx="26" fill="white" stroke="#171717" stroke-width="5"/>';
+  const headerLine='<path d="M95 192h610" fill="none" stroke="#171717" stroke-width="3" stroke-dasharray="5 13"/>';
+  const sparkles='<path d="M130 230v-24m-12 12h24m485 15v-24m-12 12h24M150 700v-20m-10 10h20m470-20v-20m-10 10h20" stroke="#171717" stroke-width="6" stroke-linecap="round"/><circle cx="130" cy="390" r="8" fill="white" stroke="#171717" stroke-width="5"/><circle cx="670" cy="390" r="8" fill="white" stroke="#171717" stroke-width="5"/>';
+  const number='<text x="400" y="932" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" fill="#171717">'+(index+1)+' / '+total+'</text>';
+  const hasGeneratedArt=!!(page.aiImageData || page.aiVectorMarkup);
+  const decorativeArt=hasGeneratedArt ? "" :
+    backgroundArt(category,index,buildTime)+sparkles+renderExtras(page,index,buildTime)+supportingObjects(page,category,index,buildTime);
+  const art=page.aiImageData
+    ? '<image x="100" y="225" width="600" height="650" preserveAspectRatio="xMidYMid meet" href="'+page.aiImageData+'"/>'
+    : page.aiVectorMarkup
+      ? '<svg x="100" y="225" width="600" height="650" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">'+page.aiVectorMarkup+'</svg>'
+      : '<g transform="translate(140 245) scale(1.0)">'+sceneArt(scene)+'</g>';
+  const detailLines=!hasGeneratedArt && buildTime==="detailed"
     ? '<path d="M105 860q25-22 50 0m500 0q25-22 50 0M125 880q18-16 36 0m478 0q18-16 36 0" fill="none" stroke="#171717" stroke-width="5" stroke-linecap="round"/><circle cx="400" cy="875" r="5" fill="#171717"/>'
     : "";
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000"><rect width="800" height="1000" fill="white"/>' + frame +
-    '<text x="400" y="120" text-anchor="middle" font-family="Arial,sans-serif" font-size="29" font-weight="700" fill="#171717">' + esc(heading) + '</text>' + subtitle + headerLine +
-    background + sparkles + renderExtras(page,index,buildTime) + supportingObjects(page,category,index,buildTime) +
-    (page.aiImageData ? '<image x="100" y="235" width="600" height="620" preserveAspectRatio="xMidYMid meet" href="' + page.aiImageData + '"/>'
-      : '<g transform="translate(140 245) scale(1.0)">' + sceneArt(scene) + '</g>') + detailLines + number + '</svg>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000"><rect width="800" height="1000" fill="white"/>'+frame+
+    '<text x="400" y="120" text-anchor="middle" font-family="Arial,sans-serif" font-size="29" font-weight="700" fill="#171717">'+esc(title)+'</text>'+
+    headerLine+decorativeArt+art+detailLines+number+'</svg>';
 }
 
 function coverText(value, y, fontSize, color) {
@@ -983,7 +1055,7 @@ function renderBook(book) {
   currentBook = normalizeBook(book);
   $("previewTitle").textContent = book.title;
   $("previewMeta").textContent = book.pages.length + " coloring pages + front and back cover · " + book.category + " · " +
-    (book.buildTime || "balanced") + " detail · " + (book.aiUsed ? HELPER_MODELS[book.helperModel || getSelectedHelperModel()].name + " plan" : "built-in plan");
+    (book.buildTime || "balanced") + " detail · " + (book.imageMode === "trace" ? "ImageTrace artwork" : "SketchForge artwork") + " · " + (book.aiUsed ? HELPER_MODELS.director.name + " plan" : "built-in plan");
   pageGrid.innerHTML = "";
   const displayPages = [
     {title:"Front cover",scene:"Book cover",svg:book.coverSvg},
@@ -1139,10 +1211,28 @@ $("aiClose").addEventListener("click",closeAiSettings);
 $("aiOverlay").addEventListener("click",event => {
   if (event.target === $("aiOverlay")) closeAiSettings();
 });
-document.querySelectorAll('input[name="helperModel"]').forEach(input => {
-  input.addEventListener("change",async () => {
-    localStorage.setItem(HELPER_PREFERENCE_KEY,input.value);
-    syncAiSettings();
+document.querySelectorAll('input[name="imageMode"]').forEach(input => {
+  input.addEventListener("change",() => {
+    localStorage.setItem(IMAGE_PREFERENCE_KEY,input.value);
+    syncImageSettings();
+    if(input.value==="trace") {
+      prepareImageModel().catch(error=>{
+        $("imageModelStatus").textContent="ImageTrace needs internet access to download its line-art model. "+(error.message||"");
+      });
+    }
+  });
+});
+$("loadHelperButton").addEventListener("click",async()=>{
+  $("loadHelperButton").disabled=true;
+  try {
+    await loadPlanner();
+    toast(HELPER_MODELS.director.name+" is ready.");
+  } catch(_) {
+    toast("The local organizer could not load. Built-in page planning is still available.");
+  } finally { $("loadHelperButton").disabled=false; }
+});
+$("removeHelperButton").addEventListener("click",clearHelperCache);
+syncAiSettings();
     planner = null;
     plannerModelId = null;
     try {
@@ -1203,78 +1293,97 @@ document.addEventListener("keydown",event => {
 });
 
 
-form.addEventListener("submit", async (event) => {
+form.addEventListener("submit",async event=>{
   event.preventDefault();
-  const title = safeText($("bookTitle").value, 70) || "My Coloring Book";
-  const description = safeText($("bookDescription").value, 500);
-  const category = $("bookCategory").value;
-  const count = Math.max(8, Math.min(60, Number($("pageCount").value) || 20));
-  const buildTime = document.querySelector('input[name="buildTime"]:checked')?.value || "balanced";
-  const buildProgress = $("buildProgress");
-  const buildProgressBar = $("buildProgressBar");
-  buildProgress.style.display = "block";
-  buildProgressBar.style.width = "0%";
-  createButton.disabled = true;
-  createButton.textContent = "Planning your pages…";
+  const title=safeText($("bookTitle").value,70) || "My Coloring Book";
+  const description=safeText($("bookDescription").value,500);
+  const category=$("bookCategory").value;
+  const count=Math.max(8,Math.min(60,Number($("pageCount").value)||20));
+  const buildTime=document.querySelector('input[name="buildTime"]:checked')?.value || "balanced";
+  const imageMode=getSelectedImageMode();
+  const buildProgressBar=$("buildProgressBar");
+  $("buildProgress").style.display="block";
+  buildProgressBar.style.width="0%";
+  createButton.disabled=true;
+  createButton.textContent="Planning your pages…";
   try {
-    const fallback = makeFallbackPages(title, description, category, count);
-    const backupPages = makeFallbackPages(title, description, category, count * 4);
-    let pages = fallback;
-    let aiUsed = false;
-    const helperModel = getSelectedHelperModel();
-    const imageModel = getSelectedImageModel();
-    if (imageModel !== "vector") await prepareImageModel();
+    const fallback=makeFallbackPages(title,description,category,count);
+    const backupPages=makeFallbackPages(title,description,category,count*4);
+    let pages=fallback;
+    let aiUsed=false;
     try {
-      if (!planner || plannerModelId !== HELPER_MODELS[helperModel].id) await loadPlanner();
-      if (planner && plannerModelId === HELPER_MODELS[helperModel].id) {
-        setModelProgress(100, "Planning page ideas with " + HELPER_MODELS[helperModel].name + "…");
-        const plannedPages = await askPlanner(title, description, category, count, fallback, buildTime);
-        aiUsed = plannedPages !== fallback;
-        pages = plannedPages;
+      if(!planner || plannerModelId!==HELPER_MODELS.director.id) await loadPlanner();
+      if(planner && plannerModelId===HELPER_MODELS.director.id) {
+        setModelProgress(100,"Planning page ideas with DoodlePress Storybook Director…");
+        const plannedPages=await askPlanner(title,description,category,count,fallback,buildTime);
+        aiUsed=plannedPages!==fallback;
+        pages=plannedPages;
       }
-    } catch (error) {
-      pages = fallback;
-      toast("The local helper had trouble. I used the built-in page planner instead.");
+    } catch(error) {
+      pages=fallback;
+      toast("The organizer could not load. I used the built-in page planner instead.");
     }
-    pages = uniquePageList(pages,backupPages,count);
-    createButton.textContent = "Drawing page 1 of " + count + "…";
-    const book = {schemaVersion:2,title,description,category,buildTime,aiUsed,helperModel,imageModel,pages:[]};
-    for (let index = 0; index < pages.length; index++) {
-      const page = pages[index];
-      if (imageModel !== "vector") {
-        createButton.textContent = "Generating illustration " + (index + 1) + " of " + count + "…";
-        const generated = await imageWorkerRequest("generate",{model:imageModel,prompt:buildImagePrompt(book,page),seed:hashText(title+page.title+index)},progress => {
-          modelProgressLabel.textContent = "Image " + (index+1) + "/" + count + " · " + (progress.phase || "Generating");
-        });
-        if (!generated.blob) throw new Error("The image model did not return an image.");
-        page.aiImageData = await blobToOutlineDataUrl(generated.blob);
+    pages=uniquePageList(pages,backupPages,count);
+    if(imageMode==="trace") {
+      createButton.textContent="Preparing ImageTrace…";
+      await prepareImageModel();
+    }
+    const book={
+      schemaVersion:3,title,description,category,buildTime,aiUsed,
+      helperModel:"director",imageMode,pages:[],sources:[]
+    };
+    const usedSourceIds=new Set();
+    let sourceFallbacks=0;
+    let sketchFallbacks=0;
+    for(let index=0;index<pages.length;index++) {
+      const page=pages[index];
+      if(imageMode==="trace") {
+        createButton.textContent="Finding a reusable image "+(index+1)+" of "+count+"…";
+        try {
+          const found=await findImageForPage(book,page,usedSourceIds);
+          page.sourceAsset=found.source;
+          createButton.textContent="Converting image "+(index+1)+" of "+count+"…";
+          const converted=await imageWorkerRequest("convert",{blob:found.blob},progress=>{
+            $("imageModelStatus").textContent=progress.message || "Converting source image to outlines…";
+          });
+          if(!converted.blob) throw new Error("ImageTrace returned no outline.");
+          page.aiImageData=await blobToDataUrl(converted.blob);
+          book.sources.push(found.source);
+        } catch(error) {
+          sourceFallbacks++;
+          createButton.textContent="Drawing a replacement outline "+(index+1)+" of "+count+"…";
+          page.aiVectorMarkup=await generateOutlineMarkup(book,page,index);
+          if(!page.aiVectorMarkup) sketchFallbacks++;
+        }
+      } else {
+        createButton.textContent="SketchForge drawing "+(index+1)+" of "+count+"…";
+        page.aiVectorMarkup=await generateOutlineMarkup(book,page,index);
+        if(!page.aiVectorMarkup) sketchFallbacks++;
       }
-      book.pages.push({...page, svg:makeSvg(page,index,count,title,category,buildTime)});
-      const percent = Math.round(((index + 1) / count) * 100);
-      buildProgressBar.style.width = percent + "%";
-      createButton.textContent = "Drawing page " + (index + 1) + " of " + count + "…";
-      await new Promise(resolve => requestAnimationFrame(resolve));
+      book.pages.push({...page,svg:makeSvg(page,index,count,title,category,buildTime)});
+      buildProgressBar.style.width=Math.round(((index+1)/count)*100)+"%";
+      await new Promise(resolve=>requestAnimationFrame(resolve));
     }
-    book.coverSvg = makeCoverSvg(book);
-    book.backSvg = makeBackCoverSvg(book);
-    let saved = false;
-    try {
-      await saveBook(book);
-      saved = true;
-    } catch (error) {
-      console.warn("Book preview is ready, but browser storage could not save it.",error);
-    }
+    book.coverSvg=makeCoverSvg(book);
+    book.backSvg=makeBackCoverSvg(book);
+    let saved=false;
+    try { await saveBook(book); saved=true; }
+    catch(error) { console.warn("Book preview is ready, but browser storage could not save it.",error); }
     renderBook(book);
-    toast(saved
-      ? (aiUsed ? "Your book is ready and saved to your library." : "Your book is ready and saved to your library.")
-      : "Your book is ready, but this browser could not save it.");
-  } catch (error) {
+    if(sourceFallbacks || sketchFallbacks) {
+      toast(sourceFallbacks
+        ? sourceFallbacks+" source searches needed a generated or built-in replacement."
+        : sketchFallbacks+" drawings used the built-in vector backup.");
+    } else {
+      toast(saved ? "Your book is ready and saved to your library." : "Your book is ready, but this browser could not save it.");
+    }
+  } catch(error) {
     console.error(error);
-    toast("Something went wrong while making the book. Please try again.");
+    toast(error && error.message ? error.message : "Something went wrong while making the book. Please try again.");
   } finally {
-    createButton.disabled = false;
-    createButton.innerHTML = 'Create my coloring book <span aria-hidden="true">→</span>';
-    buildProgressBar.style.width = "100%";
+    createButton.disabled=false;
+    createButton.innerHTML='Create my coloring book <span aria-hidden="true">→</span>';
+    buildProgressBar.style.width="100%";
   }
 });
 
@@ -1357,8 +1466,11 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
 // Automatically prepare the selected starter model after the page is usable.
 // The browser cache keeps its files for later visits; no manual model picker is needed.
 window.addEventListener("load", () => {
-  window.setTimeout(() => {
-    loadPlanner().catch(error => console.warn("Local planner setup did not finish; built-in planning remains available.",error));
+  window.setTimeout(async () => {
+    try { await loadPlanner(); }
+    catch (error) { console.warn("Storybook Director setup did not finish; built-in planning remains available.",error); }
+    try { await prepareImageModel(); }
+    catch (error) { console.warn("ImageTrace model preload did not finish; it can retry when selected.",error); }
   }, 900);
 }, {once:true});
 </script>
