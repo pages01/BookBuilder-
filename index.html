@@ -670,15 +670,28 @@ function isUsableSvgPathData(value) {
   if(typeof value!=="string" || value.length<8 || value.length>1600) return false;
   if(/[<>]|\.\.\.|…/.test(value) || !/^[Mm]/.test(value.trim())) return false;
   if(!/^[MmLlHhVvCcSsQqTtAaZz0-9eE.,+\-\s]+$/.test(value)) return false;
-  const path=document.createElementNS("http://www.w3.org/2000/svg","path");
-  path.setAttribute("d",value);
-  if(typeof path.getTotalLength==="function") {
-    try { const length=path.getTotalLength(); return Number.isFinite(length) && length>4; }
-    catch(_) { return false; }
-  }
   const commands=(value.match(/[MmLlHhVvCcSsQqTtAaZz]/g)||[]).length;
   const numbers=(value.match(/-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi)||[]).length;
-  return commands>=2 && numbers>=4;
+  if(commands<2 || numbers<6) return false;
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+  path.setAttribute("d",value);
+  svg.setAttribute("width","1");
+  svg.setAttribute("height","1");
+  svg.style.position="absolute";
+  svg.style.visibility="hidden";
+  svg.style.left="-10000px";
+  svg.appendChild(path);
+  document.body.appendChild(svg);
+  try {
+    if(typeof path.getTotalLength!=="function") return true;
+    const length=path.getTotalLength();
+    return Number.isFinite(length) && length>4;
+  } catch(_) {
+    return false;
+  } finally {
+    svg.remove();
+  }
 }
 function makeGeneratedArtMarkup(spec) {
   if(!spec || !Array.isArray(spec.shapes) || spec.shapes.length<1) return null;
