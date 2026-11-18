@@ -234,7 +234,6 @@
                 <span class="model-pill active">TEXT TO ART</span>
               </label>
             </div>
-            <div class="ai-control-row"><button class="secondary" id="loadLineArtButton" type="button">Prepare ImageTrace model</button></div>
             <div class="ai-storage-note" id="imageModelStatus">SketchForge is selected. It uses the local Storybook Director.</div>
           </section>
           <section class="ai-group">
@@ -575,7 +574,7 @@ function syncImageSettings() {
 }
 function getImageWorker() {
   if (imageWorker) return imageWorker;
-  imageWorker = new Worker("./image-worker.js?v=2",{type:"module"});
+  imageWorker = new Worker("./image-worker.js?v=3");
   imageWorker.addEventListener("message",event => {
     const message = event.data || {};
     const pending = imageRequests.get(message.id);
@@ -709,7 +708,7 @@ function makeGeneratedArtMarkup(spec) {
 }
 const SKETCHFORGE_INSTRUCTIONS = "You are DoodlePress SketchForge, a vector illustrator for printable children's coloring books. Draw a complete original scene from the user's description. Return only strict JSON, no markdown and no XML. The schema is {\"shapes\":[{\"type\":\"path\",\"d\":\"M...\",\"strokeWidth\":7,\"fill\":\"none\"},{\"type\":\"circle\",\"cx\":256,\"cy\":256,\"r\":40,\"strokeWidth\":7,\"fill\":\"white\"}]}. Allowed shape types: path, circle, ellipse, rect, line, polyline, polygon. Use only SVG path commands and numbers in path data. Coordinate space is 0 to 512 in both directions. Draw 8 to 20 well-composed shapes. Use thick black strokes, rounded joins, and white or no fills; tiny black fills are allowed only for eyes or tiny details. Make a large recognizable main subject, expressive friendly features, clear closed contours, and a few helpful background objects. Leave large open areas that children can color. Keep every important object inside the page. No text, letters, gradients, shading, hatching, gray fills, color, logos, borders, or watermarks. Avoid tiny clutter.";
 async function generateOutlineMarkup(book,page,index) {
-  if(!planner) return null;
+  if(!planner) throw new Error("Storybook Director is not loaded, so SketchForge cannot draw this page.");
   const scene=SCENES[page.scene]?.title || page.scene || "a friendly character";
   const prompt="Create one original coloring page drawing. Book: "+book.title+
     ". Overall theme: "+book.description+". Page scene: "+page.title+
@@ -721,16 +720,13 @@ async function generateOutlineMarkup(book,page,index) {
   ],{max_new_tokens:620,do_sample:true,temperature:0.38,top_p:0.86});
   const raw=extractModelText(result);
   const start=raw.indexOf("{"),end=raw.lastIndexOf("}");
-  if(start<0 || end<=start) return null;
-  try { return makeGeneratedArtMarkup(JSON.parse(raw.slice(start,end+1))); }
-  catch(_) { return null; }
-}
-function buildImagePrompt(book,page) {
-  const scene=SCENES[page.scene]?.title||page.scene||"a friendly character";
-  const extras=Array.isArray(page.extras)?page.extras.join(", "):"";
-  return "Printable children's coloring-book illustration, pure black ink outlines on plain white paper. Main subject: "+scene+
-    ". Scene: "+page.title+". Theme: "+book.description+". Supporting objects: "+extras+
-    ". One large friendly subject, clean rounded contours, simple readable composition, large open areas for crayons. No shading, grayscale, color, solid black fills, words, letters, watermark, or border. Square image.";
+  if(start<0 || end<=start) throw new Error("SketchForge did not return a valid drawing. Try a simpler page description.");
+  let spec;
+  try { spec=JSON.parse(raw.slice(start,end+1)); }
+  catch(_) { throw new Error("SketchForge returned incomplete drawing data. Try again or simplify the page description."); }
+  const markup=makeGeneratedArtMarkup(spec);
+  if(!markup) throw new Error("SketchForge could not create enough usable outline shapes for this page. Try again or use ImageTrace.");
+  return markup;
 }
 function syncAiSettings() {
   syncImageSettings();
@@ -1316,26 +1312,22 @@ form.addEventListener("submit",async event=>{
       const page=pages[index];
       if(imageMode==="trace") {
         createButton.textContent="Finding a reusable image "+(index+1)+" of "+count+"…";
-        try {
-          const found=await findImageForPage(book,page,usedSourceIds);
-          page.sourceAsset=found.source;
-          createButton.textContent="Converting image "+(index+1)+" of "+count+"…";
-          const converted=await imageWorkerRequest("convert",{blob:found.blob},progress=>{
-            $("imageModelStatus").textContent=progress.message || "Converting source image to outlines…";
-          });
-          if(!converted.blob) throw new Error("ImageTrace returned no outline.");
-          page.aiImageData=await blobToDataUrl(converted.blob);
-          book.sources.push(found.source);
-        } catch(error) {
-          sourceFallbacks++;
-          createButton.textContent="Drawing a replacement outline "+(index+1)+" of "+count+"…";
-          page.aiVectorMarkup=await generateOutlineMarkup(book,page,index);
-          if(!page.aiVectorMarkup) sketchFallbacks++;
-        }
+        const found=await findImageForPage(book,page,usedSourceIds);
+        page.sourceAsset=found.source;
+        createButton.textContent="Converting image "+(index+1)+" of "+count+"…";
+        const converted=await imageWorkerRequest("convert",{blob:found.blob},progress=>{
+          $("imageModelStatus").textContent=progress.message || "Converting source image to outlines…";
+        });
+        if(!converted.blob) throw new Error("ImageTrace returned no outline.");
+        page.aiImageData=await blobToDataUrl(converted.blob);
+        book.sources.push(found.source);
       } else {
         createButton.textContent="SketchForge drawing "+(index+1)+" of "+count+"…";
         page.aiVectorMarkup=await generateOutlineMarkup(book,page,index);
-        if(!page.aiVectorMarkup) sketchFallbacks++;
+      }
+      // Never silently substitute the old built-in artwork for a failed AI drawing.
+      if(!page.aiImageData && !page.aiVectorMarkup) {
+        throw new Error("No new artwork was generated for page "+(index+1)+". The old built-in drawing has not been substituted.");
       }
       book.pages.push({...page,svg:makeSvg(page,index,count,title,category,buildTime)});
       buildProgressBar.style.width=Math.round(((index+1)/count)*100)+"%";
@@ -1438,16 +1430,18 @@ pdfButton.addEventListener("click", async () => {
 
 refreshLibraryCount().catch(() => {});
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=8", {updateViaCache:"none"}).catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=9", {updateViaCache:"none"}).catch(() => {}));
 }
 // Automatically prepare the selected starter model after the page is usable.
 // The browser cache keeps its files for later visits; no manual model picker is needed.
 window.addEventListener("load", () => {
   window.setTimeout(async () => {
     try { await loadPlanner(); }
-    catch (error) { console.warn("Storybook Director setup did not finish; built-in planning remains available.",error); }
-    try { await prepareImageModel(); }
-    catch (error) { console.warn("ImageTrace model preload did not finish; it can retry when selected.",error); }
+    catch (error) { console.warn("Storybook Director setup did not finish; model-backed drawing will require a retry.",error); }
+    if(getSelectedImageMode()==="trace") {
+      try { await prepareImageModel(); }
+      catch (error) { $("imageModelStatus").textContent="ImageTrace could not load: "+(error.message||"Check your connection and retry."); }
+    }
   }, 900);
 }, {once:true});
 </script>
