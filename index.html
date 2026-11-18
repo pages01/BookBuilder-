@@ -157,6 +157,28 @@
       .model-option{grid-template-columns:16px minmax(0,1fr);gap:9px}
       .model-option>.model-pill{grid-column:2;justify-self:start}
     }
+
+    /* Compact, balanced mobile header: no tall stacked controls or oversized gap above the hero. */
+    @media(max-width:800px){header{margin-bottom:14px}.hero{margin-top:4px;margin-bottom:20px}}
+    @media(max-width:540px){
+      .shell{padding-top:7px}
+      header{align-items:center;gap:8px;margin-bottom:13px}
+      .brand{font-size:18px;gap:8px;white-space:nowrap}
+      .brand-mark{width:34px;height:34px;border-radius:11px}
+      .top-actions{flex-direction:row;align-items:center;justify-content:flex-end;gap:6px;min-width:0}
+      .advanced-open,.library-open{padding:8px 9px;font-size:10px;white-space:nowrap}
+      .top-note{display:none}
+      .hero{margin:7px auto 19px}
+      .eyebrow{font-size:9px;padding:6px 10px}
+      h1{font-size:clamp(34px,9vw,46px);letter-spacing:-1.7px;margin:9px 0}
+      .hero p{font-size:13px;line-height:1.5;padding:0 5px}
+    }
+    @media(max-width:370px){
+      .brand{font-size:16px;gap:6px}
+      .brand-mark{width:31px;height:31px}
+      .advanced-open,.library-open{font-size:9px;padding:7px}
+      .top-actions{gap:4px}
+    }
   </style>
 </head>
 <body>
@@ -196,15 +218,13 @@
         </div>
         <div class="ai-settings-content">
           <section class="ai-group">
-            <div class="ai-group-heading"><h3>Image generation</h3><span class="model-pill active">3 ENGINES</span></div>
-            <p class="ai-explain">Choose what actually draws the coloring pages. Neural models run locally on your device after their first download.</p>
+            <div class="ai-group-heading"><h3>Image generation</h3><span class="model-pill active">DEFAULT</span></div>
+            <p class="ai-explain">DoodlePress Vector Art is the built-in drawing engine. It creates crisp printable line art instantly, with no model download or internet connection required.</p>
             <div class="model-choice-list" id="imageModelChoices">
-              <label class="model-option selected" for="imageVector"><input type="radio" name="imageModel" id="imageVector" value="vector" checked><span class="model-radio-dot"></span><div class="model-copy"><strong>DoodlePress Vector Art</strong><span>Instant built-in SVG line art. Small files, crisp print quality, and works without WebGPU.</span></div><span class="model-pill active">READY</span></label>
-              <label class="model-option" for="imageSdTurbo"><input type="radio" name="imageModel" id="imageSdTurbo" value="sd-turbo"><span class="model-radio-dot"></span><div class="model-copy"><strong>Stable Diffusion Turbo</strong><span>Neural image generation · About 2.6 GB · 512×512 · WebGPU required. The source weights are non-commercial, so use this for personal projects only.</span></div><span class="model-pill">WEBGPU</span></label>
-              <label class="model-option" for="imageJanus"><input type="radio" name="imageModel" id="imageJanus" value="janus-pro-1b"><span class="model-radio-dot"></span><div class="model-copy"><strong>Janus-Pro-1B</strong><span>Advanced neural image generation · About 2.3 GB · Requires WebGPU and more memory.</span></div><span class="model-pill">ADVANCED</span></label>
+              <label class="model-option selected" for="imageVector"><input type="radio" name="imageModel" id="imageVector" value="vector" checked><span class="model-radio-dot"></span><div class="model-copy"><strong>DoodlePress Vector Art</strong><span>Instant built-in SVG line art · Crisp print quality · Works offline · No WebGPU or large download required.</span></div><span class="model-pill active">READY</span></label>
             </div>
-            <div class="ai-control-row"><span id="imageSelectionState">DoodlePress Vector Art selected</span><button class="secondary" id="prepareImageButton" type="button">Prepare selected</button><button class="secondary" id="unloadImageButton" type="button">Unload image model</button><button class="secondary delete-design" id="clearImageCacheButton" type="button">Clear SD-Turbo cache</button></div>
-            <div class="ai-storage-note" id="imageModelStatus">Vector Art is ready immediately. Neural models download on first use and run in a background worker.</div>
+            <div class="ai-control-row"><span id="imageSelectionState">DoodlePress Vector Art selected</span></div>
+            <div class="ai-storage-note" id="imageModelStatus">Your default image engine is ready immediately. No setup is needed.</div>
           </section>
 
           <section class="ai-group">
@@ -313,7 +333,7 @@
       <div class="small-print">Tip: On iPhone, use the Share menu after the PDF opens and choose Save to Files. Printing is easiest on US Letter paper.</div>
     </section>
 
-    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Helper AI: LFM2.5-350M or Qwen3-0.6B · Artwork: locally generated vector line art</div>
+    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Helper AI: LFM2.5-350M or Qwen3-0.6B · Artwork: DoodlePress Vector Art</div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -324,9 +344,7 @@ const HELPER_MODELS = {
 };
 const HELPER_PREFERENCE_KEY = "doodlepress-helper-model";
 const IMAGE_MODELS = {
-  vector:{id:"vector",name:"DoodlePress Vector Art"},
-  "sd-turbo":{id:"sd-turbo",name:"Stable Diffusion Turbo"},
-  "janus-pro-1b":{id:"janus-pro-1b",name:"Janus-Pro-1B"}
+  vector:{id:"vector",name:"DoodlePress Vector Art"}
 };
 const IMAGE_PREFERENCE_KEY = "doodlepress-image-model";
 let planner = null;
@@ -547,12 +565,9 @@ function syncImageSettings() {
     input.closest(".model-option")?.classList.toggle("selected",active);
   });
   $("imageSelectionState").textContent = IMAGE_MODELS[selected].name + " selected";
-  $("clearImageCacheButton").disabled = selected !== "sd-turbo";
   $("imageModelStatus").textContent = selected === "vector"
     ? "Vector Art is ready immediately. No download or WebGPU is needed."
-    : imageModelLoaded === selected
-      ? IMAGE_MODELS[selected].name + " is loaded and ready."
-      : "Selected: " + IMAGE_MODELS[selected].name + ". Prepare it now or create a book to download and load it.";
+    : IMAGE_MODELS[selected].name + " is ready.";
 }
 function getImageWorker() {
   if (imageWorker) return imageWorker;
@@ -1138,17 +1153,6 @@ document.querySelectorAll('input[name="helperModel"]').forEach(input => {
     }
   });
 });
-document.querySelectorAll('input[name="imageModel"]').forEach(input => input.addEventListener("change",() => {
-  localStorage.setItem(IMAGE_PREFERENCE_KEY,input.value); syncImageSettings();
-}));
-$("prepareImageButton").addEventListener("click",async () => {
-  try { await prepareImageModel(); toast(IMAGE_MODELS[getSelectedImageModel()].name + " is ready."); }
-  catch(error) { $("imageModelStatus").textContent=error.message; toast(error.message); }
-});
-$("unloadImageButton").addEventListener("click",async () => {
-  try { await unloadImageModel(); toast("Neural image model unloaded."); } catch(error) { toast(error.message); }
-});
-$("clearImageCacheButton").addEventListener("click",clearSdTurboCache);
 $("loadHelperButton").addEventListener("click",async () => {
   $("loadHelperButton").disabled = true;
   try {
