@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fbf8f2">
+  <meta name="description" content="Make a printable coloring book with local AI planning and crisp black-and-white vector art.">
+  <title>DoodlePress — Make a coloring book</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <style>
+    :root{--ink:#242321;--muted:#77746e;--paper:#fbf8f2;--card:#fffefa;--line:#e9e2d7;--pink:#ff786b;--pink2:#ffe5df;--lav:#ded8ff;--mint:#dff2e7;--gold:#ffe8a8;--shadow:0 18px 55px rgba(54,42,30,.08)}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:ui-rounded,"SF Pro Rounded","Avenir Next",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    .shell{width:min(1100px,calc(100% - 32px));margin:0 auto;padding:22px 0 60px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:44px}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:850;letter-spacing:-.7px;font-size:21px}
+    .brand-mark{width:39px;height:39px;display:grid;place-items:center;border-radius:13px;background:var(--pink2);border:1px solid #ffd1c8}
+    .brand-mark svg{width:25px;height:25px}
+    .top-note{font-size:12px;font-weight:750;color:#55514a;background:#f1ece3;border:1px solid var(--line);padding:8px 12px;border-radius:99px}
+    .hero{max-width:760px;margin:0 auto 34px;text-align:center}
+    .eyebrow{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;background:var(--mint);border-radius:99px;color:#315744;font-weight:800;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+    h1{font-size:clamp(35px,6vw,62px);line-height:1.02;letter-spacing:-2.8px;margin:18px 0 14px;font-weight:900}
+    h1 .accent{color:#f16f61}
+    .hero p{color:var(--muted);font-size:16px;line-height:1.65;max-width:590px;margin:0 auto}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;align-items:start}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:23px;box-shadow:var(--shadow)}
+    .form-panel{padding:25px}
+    .section-head{display:flex;align-items:center;gap:11px;margin-bottom:22px}
+    .step{width:31px;height:31px;display:grid;place-items:center;background:var(--lav);border-radius:10px;font-size:13px;font-weight:900}
+    .section-head h2{font-size:18px;margin:0;letter-spacing:-.4px}
+    .field{margin-bottom:18px}
+    .field label{display:block;font-size:12px;font-weight:800;margin-bottom:8px;color:#4f4b45}
+    .field input,.field textarea,.field select{width:100%;border:1px solid #e5ded3;background:#fff;border-radius:12px;padding:13px 14px;color:var(--ink);outline:none;transition:border .15s,box-shadow .15s}
+    .field input:focus,.field textarea:focus,.field select:focus{border-color:#f18c80;box-shadow:0 0 0 3px #ff786b20}
+    .field textarea{resize:vertical;min-height:94px;line-height:1.5}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .hint{font-size:11px;color:var(--muted);line-height:1.45;margin-top:7px}
+    .primary{width:100%;border:0;background:var(--pink);color:#fff;border-radius:13px;padding:15px 18px;font-weight:850;font-size:15px;box-shadow:0 7px 0 #d9574d;transition:transform .12s,box-shadow .12s}
+    .primary:active{transform:translateY(4px);box-shadow:0 3px 0 #d9574d}
+    .primary:disabled{opacity:.55;cursor:wait;transform:none;box-shadow:none}
+    .side-stack{display:grid;gap:14px}
+    .ai-card{padding:19px;background:#f2efff;border-color:#e4defb}
+    .ai-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .ai-head h3{font-size:14px;margin:0}
+    .status{font-size:10px;font-weight:850;background:#fff;border:1px solid #ded8fa;padding:5px 8px;border-radius:99px;color:#6d61a5}
+    .ai-card p{font-size:12px;color:#615c76;line-height:1.55;margin:12px 0}
+    .model-button{width:100%;border:1px solid #d8d0fa;background:#fff;color:#50467f;border-radius:11px;padding:11px 12px;font-size:12px;font-weight:850}
+    .model-button:disabled{opacity:.6;cursor:wait}
+    .progress{height:7px;background:#dedaf0;border-radius:99px;overflow:hidden;margin-top:12px;display:none}
+    .progress>span{height:100%;display:block;width:0;background:#8d7ddd;border-radius:99px;transition:width .2s}
+    .progress-label{font-size:10px;color:#716b84;margin-top:6px;min-height:14px}
+    .facts{padding:18px}
+    .fact{display:flex;gap:11px;align-items:flex-start}
+    .fact+.fact{margin-top:15px}
+    .fact-icon{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;font-size:15px}
+    .fact strong{display:block;font-size:12px;margin:1px 0 3px}
+    .fact span{display:block;font-size:11px;line-height:1.45;color:var(--muted)}
+    .notice{font-size:11px;line-height:1.55;color:#6b6256;background:#fff8e7;border:1px solid #f2e7c6;padding:12px 13px;border-radius:12px;margin-top:16px}
+    .preview-section{margin-top:26px;display:none}
+    .preview-top{display:flex;align-items:flex-end;justify-content:space-between;gap:15px;margin:0 0 14px}
+    .preview-top h2{font-size:23px;letter-spacing:-.7px;margin:0}
+    .preview-top p{font-size:12px;color:var(--muted);margin:5px 0 0}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .secondary{border:1px solid var(--line);background:#fffefa;padding:10px 13px;border-radius:11px;font-size:12px;font-weight:850;color:var(--ink)}
+    .secondary.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .page-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+    .page-card{padding:9px;background:#fff;border:1px solid var(--line);border-radius:13px;min-width:0}
+    .page-card img{display:block;width:100%;aspect-ratio:4/5;object-fit:contain;background:white;border-radius:7px}
+    .page-card strong{display:block;font-size:11px;margin:8px 2px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .page-card span{font-size:10px;color:var(--muted);margin-left:2px}
+    .empty-state{padding:45px 20px;text-align:center;border:1px dashed #dcd4c8;border-radius:18px;color:var(--muted)}
+    .empty-art{font-size:35px;margin-bottom:10px}
+    .footer{text-align:center;color:#9a9389;font-size:11px;margin-top:36px;line-height:1.6}
+    .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#262522;color:#fff;padding:12px 16px;border-radius:12px;font-size:12px;box-shadow:0 12px 30px #0002;transition:.2s;z-index:10;max-width:calc(100% - 30px);text-align:center}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .small-print{color:#999187;font-size:10px;line-height:1.5;margin-top:12px}
+    @media(max-width:800px){.layout{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr}.page-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{margin-bottom:26px}header{margin-bottom:30px}}
+    @media(max-width:540px){.shell{width:min(100% - 22px,680px);padding-top:15px}.top-note{font-size:10px;padding:7px 9px}.brand{font-size:19px}.hero p{font-size:14px}.form-panel{padding:18px}.two-col{grid-template-columns:1fr 1fr;gap:10px}.side-stack{grid-template-columns:1fr}.page-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.preview-top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions button{flex:1}.preview-top h2{font-size:21px}h1{letter-spacing:-1.8px}.ai-card{padding:17px}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none"><path d="M7 23.5 21.8 8.7a3.2 3.2 0 0 1 4.5 4.5L11.5 28H7v-4.5Z" fill="#ff786b" stroke="#242321" stroke-width="1.7" stroke-linejoin="round"/><path d="m19.5 11 4.5 4.5M6 5.5h7M9.5 2v7M25 22l1.5 3.2L30 26.5l-3.5 1.3L25 31l-1.5-3.2-3.5-1.3 3.5-1.3L25 22Z" stroke="#242321" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span>DoodlePress</span>
+      </div>
+      <div class="top-note">✦ Private, on-device studio</div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow"><span>✦</span> A little creativity goes a long way</div>
+      <h1>Make a coloring book.<br><span class="accent">Keep it all yours.</span></h1>
+      <p>Start with one idea. DoodlePress plans the pages, creates simple black-and-white drawings, and puts everything into a printable PDF — right in your browser.</p>
+    </section>
+
+    <div class="layout">
+      <section class="panel form-panel">
+        <div class="section-head"><div class="step">01</div><h2>Tell us about your book</h2></div>
+        <form id="bookForm">
+          <div class="field">
+            <label for="bookTitle">Book title</label>
+            <input id="bookTitle" name="title" maxlength="70" value="A Little World of Animals" placeholder="e.g. A Little World of Animals" required>
+          </div>
+          <div class="field">
+            <label for="bookDescription">What should the book be about?</label>
+            <textarea id="bookDescription" name="description" maxlength="500" placeholder="Describe the theme, characters, and anything you would like included.">A cheerful collection of friendly animals doing fun everyday activities. Keep every picture simple, cute, and easy for young children to color.</textarea>
+            <div class="hint">A sentence or two is plenty. The page planner will turn your idea into individual scenes.</div>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label for="bookCategory">Category</label>
+              <select id="bookCategory" name="category">
+                <option>Animals</option><option>Space</option><option>Ocean</option><option>Dinosaurs</option><option>Vehicles</option><option>Nature</option><option>Fantasy</option><option>Food</option><option>General</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="pageCount">Number of pages</label>
+              <select id="pageCount" name="pageCount">
+                <option value="8">8 pages</option><option value="12">12 pages</option><option value="20" selected>20 pages</option><option value="30">30 pages</option><option value="40">40 pages</option><option value="60">60 pages</option>
+              </select>
+            </div>
+          </div>
+          <button id="createButton" class="primary" type="submit">Create my coloring book <span aria-hidden="true">→</span></button>
+          <div class="small-print">You can create a book immediately with the built-in local art engine. Downloading the planner adds AI-generated page ideas.</div>
+        </form>
+      </section>
+
+      <aside class="side-stack">
+        <section class="panel ai-card">
+          <div class="ai-head"><h3>✧ Local AI page planner</h3><span class="status" id="modelStatus">NOT INSTALLED</span></div>
+          <p>The optional LFM2.5-350M model helps turn your description into a varied page-by-page plan. It runs on your device with WebGPU.</p>
+          <button class="model-button" id="downloadModel" type="button">Download planner · about 276 MB</button>
+          <div class="progress" id="modelProgress"><span id="modelProgressBar"></span></div>
+          <div class="progress-label" id="modelProgressLabel">The model is only downloaded when you tap the button.</div>
+          <div class="small-print">After setup, planning can run without sending your book idea to a server. Your browser may remove cached model files to free space.</div>
+        </section>
+        <section class="panel facts">
+          <div class="fact"><div class="fact-icon" style="background:var(--pink2)">✎</div><div><strong>Made for coloring</strong><span>Bold outlines, roomy shapes, no color, and no busy backgrounds.</span></div></div>
+          <div class="fact"><div class="fact-icon" style="background:var(--gold)">▢</div><div><strong>Print-friendly pages</strong><span>Clean vector artwork, arranged for standard US Letter paper.</span></div></div>
+          <div class="fact"><div class="fact-icon" style="background:var(--mint)">⌂</div><div><strong>Runs in your browser</strong><span>No account, image uploads, or cloud generation service.</span></div></div>
+          <div class="notice"><strong>About the drawings:</strong> The first version uses a lightweight local vector-art engine rather than a multi-gigabyte image model. That keeps the pages crisp and the experience practical on iPhone.</div>
+        </section>
+      </aside>
+    </div>
+
+    <section class="preview-section" id="previewSection">
+      <div class="preview-top">
+        <div><h2 id="previewTitle">Your coloring book</h2><p id="previewMeta">Your pages are ready.</p></div>
+        <div class="actions">
+          <button class="secondary" id="editButton" type="button">← Edit details</button>
+          <button class="secondary dark" id="pdfButton" type="button">Download PDF ↓</button>
+        </div>
+      </div>
+      <div class="page-grid" id="pageGrid"></div>
+      <div class="small-print">Tip: On iPhone, use the Share menu after the PDF opens and choose Save to Files. Printing is easiest on US Letter paper.</div>
+    </section>
+
+    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Local planner model: LFM2.5-350M-ONNX · Local artwork: generated SVG line art</div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+const MODEL_ID = "onnx-community/LFM2.5-350M-ONNX";
+let planner = null;
+let currentBook = null;
+let toastTimer = null;
+
+const $ = (id) => document.getElementById(id);
+const form = $("bookForm");
+const modelStatus = $("modelStatus");
+const modelButton = $("downloadModel");
+const modelProgress = $("modelProgress");
+const modelProgressBar = $("modelProgressBar");
+const modelProgressLabel = $("modelProgressLabel");
+const createButton = $("createButton");
+const previewSection = $("previewSection");
+const pageGrid = $("pageGrid");
+const pdfButton = $("pdfButton");
+
+function toast(message) {
+  const el = $("toast");
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 3200);
+}
+function setModelProgress(percent, label) {
+  modelProgress.style.display = "block";
+  modelProgressBar.style.width = Math.max(0, Math.min(100, percent || 0)) + "%";
+  modelProgressLabel.textContent = label || "Preparing local AI…";
+}
+function safeText(value, max) {
+  return String(value || "").replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, max || 70);
+}
+function esc(value) {
+  return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+function hashText(value) {
+  let h = 2166136261;
+  for (let i = 0; i < value.length; i++) h = Math.imul(h ^ value.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+const SCENES = {
+  cat: {title:"Curious kitten", group:"Animals"},
+  dog: {title:"Playful puppy", group:"Animals"},
+  bunny: {title:"Bouncy bunny", group:"Animals"},
+  butterfly: {title:"Butterfly garden", group:"Nature"},
+  flower: {title:"Smiling flower", group:"Nature"},
+  tree: {title:"A happy tree", group:"Nature"},
+  sun: {title:"Sunny day", group:"Nature"},
+  rainbow: {title:"Rainbow and clouds", group:"Nature"},
+  rocket: {title:"Little rocket", group:"Space"},
+  planet: {title:"Ringed planet", group:"Space"},
+  star: {title:"A friendly star", group:"Space"},
+  car: {title:"Little roadster", group:"Vehicles"},
+  train: {title:"Chugging train", group:"Vehicles"},
+  airplane: {title:"Flying airplane", group:"Vehicles"},
+  fish: {title:"Friendly fish", group:"Ocean"},
+  octopus: {title:"Happy octopus", group:"Ocean"},
+  whale: {title:"Gentle whale", group:"Ocean"},
+  turtle: {title:"Tiny sea turtle", group:"Ocean"},
+  castle: {title:"Fairytale castle", group:"Fantasy"},
+  unicorn: {title:"Dreamy unicorn", group:"Fantasy"},
+  dinosaur: {title:"Little dinosaur", group:"Dinosaurs"},
+  cupcake: {title:"A sweet cupcake", group:"Food"},
+  house: {title:"Cozy little house", group:"General"},
+  robot: {title:"Helpful robot", group:"General"},
+  mushroom: {title:"Storybook mushroom", group:"Nature"},
+  apple: {title:"A big apple", group:"Food"},
+  kite: {title:"A flying kite", group:"General"},
+  balloon: {title:"A happy balloon", group:"General"},
+  icecream: {title:"Ice cream treat", group:"Food"},
+  pizza: {title:"Pizza party", group:"Food"}
+};
+const CATEGORY_SCENES = {
+  Animals:["cat","dog","bunny","butterfly","turtle"],
+  Space:["rocket","planet","star","rocket","planet"],
+  Ocean:["fish","octopus","whale","turtle","fish"],
+  Dinosaurs:["dinosaur","dinosaur","dinosaur","rocket","tree"],
+  Vehicles:["car","train","airplane","rocket","car"],
+  Nature:["flower","tree","sun","rainbow","butterfly","mushroom"],
+  Fantasy:["castle","unicorn","star","butterfly","castle"],
+  Food:["cupcake","apple","icecream","pizza","cupcake"],
+  General:["house","robot","kite","balloon","flower","car"]
+};
+const KEYWORDS = [
+  ["cat",/cat|kitten|kitty/i],["dog",/dog|puppy/i],["bunny",/bunny|rabbit/i],["butterfly",/butterfl/i],
+  ["flower",/flower|garden|petal/i],["tree",/tree|forest/i],["sun",/sunshine|sunny|sun\b/i],["rainbow",/rainbow/i],
+  ["rocket",/rocket|space ship|spaceship/i],["planet",/planet|saturn/i],["star",/star/i],["car",/car|race car/i],
+  ["train",/train/i],["airplane",/plane|airplane|aircraft/i],["fish",/fish/i],["octopus",/octopus/i],["whale",/whale/i],
+  ["turtle",/turtle/i],["castle",/castle/i],["unicorn",/unicorn/i],["dinosaur",/dino|dinosaur/i],["cupcake",/cupcake/i],
+  ["house",/house|home/i],["robot",/robot/i],["mushroom",/mushroom/i],["apple",/apple/i],["kite",/kite/i],
+  ["balloon",/balloon/i],["icecream",/ice cream|icecream/i],["pizza",/pizza/i]
+];
+
+function chooseScene(text, allowed) {
+  for (const item of KEYWORDS) {
+    if (item[1].test(text) && SCENES[item[0]]) return item[0];
+  }
+  return allowed[0];
+}
+function makeFallbackPages(title, description, category, count) {
+  const allowed = CATEGORY_SCENES[category] || CATEGORY_SCENES.General;
+  const seed = hashText(title + description + category);
+  const matched = chooseScene(description, allowed);
+  const pages = [];
+  for (let i = 0; i < count; i++) {
+    const scene = i === 0 ? matched : allowed[(i * 3 + (seed % allowed.length)) % allowed.length];
+    const base = SCENES[scene] || SCENES.flower;
+    pages.push({title: base.title, scene: scene, note: "A simple, cheerful " + base.title.toLowerCase() + " to color."});
+  }
+  return pages;
+}
+function extractModelText(output) {
+  let value = output && output[0] ? output[0].generated_text : "";
+  if (Array.isArray(value)) {
+    const last = value.filter(x => x && x.role === "assistant").pop() || value[value.length - 1];
+    value = last && (last.content || last.text) ? (last.content || last.text) : "";
+  }
+  return typeof value === "string" ? value : "";
+}
+function parseModelPages(text, fallback, count) {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start < 0 || end <= start) return fallback;
+  try {
+    const parsed = JSON.parse(text.slice(start, end + 1));
+    if (!parsed || !Array.isArray(parsed.pages)) return fallback;
+    const used = parsed.pages.map((item, i) => {
+      const scene = SCENES[item.scene] ? item.scene : fallback[i % fallback.length].scene;
+      const base = SCENES[scene];
+      return {scene, title: safeText(item.title, 42) || base.title, note: "A simple " + base.title.toLowerCase() + " scene to color."};
+    });
+    if (used.length < count * 0.6) return fallback;
+    while (used.length < count) used.push(fallback[used.length % fallback.length]);
+    return used.slice(0, count);
+  } catch (_) {
+    return fallback;
+  }
+}
+
+async function loadPlanner() {
+  if (planner) return planner;
+  if (!navigator.gpu) throw new Error("WebGPU is not available in this browser session.");
+  modelButton.disabled = true;
+  modelButton.textContent = "Loading local AI…";
+  modelStatus.textContent = "DOWNLOADING";
+  setModelProgress(1, "Loading the model runtime…");
+  try {
+    const { pipeline, env } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0");
+    env.allowLocalModels = false;
+    env.useBrowserCache = true;
+    planner = await pipeline("text-generation", MODEL_ID, {
+      device: "webgpu",
+      dtype: "q4f16",
+      progress_callback: (info) => {
+        if (info && typeof info.progress === "number") {
+          const label = info.file ? "Downloading " + info.file : "Downloading model files…";
+          setModelProgress(info.progress, label);
+        } else if (info && info.status) {
+          setModelProgress(10, info.status);
+        }
+      }
+    });
+    modelStatus.textContent = "READY";
+    modelStatus.style.background = "#e5f6e9";
+    modelStatus.style.color = "#315744";
+    modelStatus.style.borderColor = "#cde9d5";
+    modelButton.textContent = "Local planner ready ✓";
+    modelProgressBar.style.width = "100%";
+    modelProgressLabel.textContent = "Ready on this device. The model can be reused from browser cache.";
+    return planner;
+  } catch (error) {
+    planner = null;
+    modelStatus.textContent = "NOT READY";
+    modelButton.disabled = false;
+    modelButton.textContent = "Try downloading again";
+    modelProgressLabel.textContent = error && error.message ? error.message : "The model could not be loaded.";
+    throw error;
+  }
+}
+
+modelButton.addEventListener("click", async () => {
+  try {
+    await loadPlanner();
+    toast("Local page planner is ready.");
+  } catch (error) {
+    toast("The local model could not start. You can still make a book without it.");
+  } finally {
+    modelButton.disabled = false;
+  }
+});
+
+async function askPlanner(title, description, category, count, fallback) {
+  if (!planner) return fallback;
+  const allowed = (CATEGORY_SCENES[category] || CATEGORY_SCENES.General).join(", ");
+  const system = "You plan friendly children's coloring books. Output only valid JSON, no markdown. Use exactly the allowed scene IDs. Every idea must be simple, cheerful, safe, and easy to draw as thick black outlines on white paper. No words inside the drawings, no color, no scary scenes. JSON format: {\"pages\":[{\"title\":\"Short page title\",\"scene\":\"one_allowed_id\"}]}";
+  const user = "Book title: " + title + "\\nDescription: " + description + "\\nCategory: " + category + "\\nMake exactly " + count + " varied coloring page ideas. Allowed scene IDs: " + allowed + ". Use only those IDs. Return JSON only.";
+  const result = await planner([{role:"system",content:system},{role:"user",content:user}], {
+    max_new_tokens: Math.min(900, 130 + count * 15),
+    do_sample: false,
+    temperature: 0.3
+  });
+  const response = extractModelText(result);
+  return parseModelPages(response, fallback, count);
+}
+
+function sceneArt(scene) {
+  const common = 'fill="white" stroke="#171717" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"';
+  const drawings = {
+    cat: '<path d="M145 155 160 30 250 100 350 30 375 165" ' + common + '/><circle cx="260" cy="190" r="145" ' + common + '/><ellipse cx="260" cy="410" rx="125" ry="105" ' + common + '/><path d="M190 445q-30 50-5 72h55m65-72q30 50 5 72h-55" ' + common + '/><circle cx="210" cy="185" r="12" fill="#171717"/><circle cx="310" cy="185" r="12" fill="#171717"/><path d="m245 225 15 12 15-12m-15 12v18m0 0q-35 35-60 4m60-4q35 35 60 4M125 220l-70-15m70 45-75 5m350-35 70-15m-70 45 75 5" fill="none" stroke="#171717" stroke-width="8" stroke-linecap="round"/>',
+    dog: '<ellipse cx="260" cy="175" rx="145" ry="155" ' + common + '/><path d="M130 95Q40 100 70 265q20 90 90 25M390 95q90 5 60 170-20 90-90 25" ' + common + '/><ellipse cx="260" cy="260" rx="72" ry="58" ' + common + '/><ellipse cx="260" cy="245" rx="22" ry="15" fill="#171717"/><circle cx="205" cy="175" r="12" fill="#171717"/><circle cx="315" cy="175" r="12" fill="#171717"/><path d="M260 260q-3 35-36 35m36-35q3 35 36 35" fill="none" stroke="#171717" stroke-width="8"/><path d="M165 365q95 55 190 0l-10 145H175Z" ' + common + '/><path d="M180 510v30m160-30v30" ' + common + '/>',
+    bunny: '<ellipse cx="205" cy="95" rx="55" ry="150" transform="rotate(-12 205 95)" ' + common + '/><ellipse cx="325" cy="95" rx="55" ry="150" transform="rotate(12 325 95)" ' + common + '/><circle cx="265" cy="245" r="130" ' + common + '/><ellipse cx="265" cy="450" rx="125" ry="105" ' + common + '/><circle cx="215" cy="235" r="12" fill="#171717"/><circle cx="315" cy="235" r="12" fill="#171717"/><path d="m250 280 15 12 15-12m-15 12v20m0 0q-32 25-55 0m55 0q32 25 55 0" fill="none" stroke="#171717" stroke-width="8" stroke-linecap="round"/><circle cx="160" cy="475" r="34" ' + common + '/><circle cx="370" cy="475" r="34" ' + common + '/>',
+    butterfly: '<path d="M255 235C70 15 5 185 80 315q70 95 175-25M265 235C450 15 515 185 440 315q-70 95-175-25M250 285C80 270 80 460 180 470q65 8 75-120M270 285c170-15 170 175 70 185q-65 8-75-120" ' + common + '/><ellipse cx="260" cy="320" rx="24" ry="125" ' + common + '/><path d="M250 205q-70-105-110-95m140 95q70-105 110-95" fill="none" stroke="#171717" stroke-width="8" stroke-linecap="round"/><circle cx="125" cy="235" r="27" ' + common + '/><circle cx="395" cy="235" r="27" ' + common + '/><circle cx="180" cy="380" r="20" ' + common + '/><circle cx="340" cy="380" r="20" ' + common + '/>',
+    flower: '<path d="M260 265v270M260 425q-105-100-150-10 85 80 150 10Zm0 65q105-100 150-10-85 80-150 10Z" ' + common + '/><circle cx="260" cy="205" r="62" ' + common + '/><ellipse cx="260" cy="100" rx="48" ry="83" ' + common + '/><ellipse cx="260" cy="310" rx="48" ry="83" ' + common + '/><ellipse cx="155" cy="205" rx="83" ry="48" ' + common + '/><ellipse cx="365" cy="205" rx="83" ry="48" ' + common + '/><circle cx="240" cy="195" r="9" fill="#171717"/><circle cx="280" cy="195" r="9" fill="#171717"/><path d="M238 225q22 25 44 0" fill="none" stroke="#171717" stroke-width="8"/>',
+    tree: '<path d="M210 500V255h105v245m-80-130-70 35m130-35 70 35" ' + common + '/><circle cx="155" cy="180" r="105" ' + common + '/><circle cx="270" cy="105" r="115" ' + common + '/><circle cx="370" cy="190" r="100" ' + common + '/><path d="M225 170q20-20 40 0m25 0q20-20 40 0m-75 45q30 35 60 0" fill="none" stroke="#171717" stroke-width="8" stroke-linecap="round"/>',
+    sun: '<circle cx="260" cy="260" r="125" ' + common + '/><circle cx="220" cy="240" r="12" fill="#171717"/><circle cx="300" cy="240" r="12" fill="#171717"/><path d="M220 300q40 45 80 0M260 75V15m0 490v-60M75 260H15m490 0h-60M130 130 85 85m350 350-45-45m0-260 45-45M130 390l-45 45" fill="none" stroke="#171717" stroke-width="10" stroke-linecap="round"/>',
+    rainbow: '<path d="M65 420a195 195 0 0 1 390 0M110 420a150 150 0 0 1 300 0M155 420a105 105 0 0 1 210 0M200 420a60 60 0 0 1 120 0" fill="none" stroke="#171717" stroke-width="12" stroke-linecap="round"/><path d="M40 400q-35-55 15-80 15-65 85-35 45 0 55 55m205 60q35-55-15-80-15-65-85-35-45 0-55 55" ' + common + '/>',
+    rocket: '<path d="M260 35q155 100 115 340l-115 105-115-105Q105 135 260 35Z" ' + common + '/><circle cx="260" cy="225" r="55" ' + common + '/><path d="m145 330-90 95 110-15m205-80 90 95-110-15M205 475q-35 60 0 90l55-50 55 50q35-30 0-90" ' + common + '/><path d="M260 450v70" fill="none" stroke="#171717" stroke-width="8"/>',
+    planet: '<circle cx="260" cy="260" r="145" ' + common + '/><ellipse cx="260" cy="260" rx="250" ry="75" transform="rotate(-18 260 260)" fill="white" stroke="#171717" stroke-width="13"/><circle cx="210" cy="240" r="12" fill="#171717"/><circle cx="300" cy="240" r="12" fill="#171717"/><path d="M220 295q40 35 80 0" fill="none" stroke="#171717" stroke-width="8"/>',
+    star: '<path d="m260 25 65 155 170 12-130 110 40 170-145-90-145 90 40-170L25 192l170-12Z" ' + common + '/><circle cx="225" cy="245" r="10" fill="#171717"/><circle cx="295" cy="245" r="10" fill="#171717"/><path d="M225 295q35 30 70 0" fill="none" stroke="#171717" stroke-width="8"/>',
+    car: '<path d="M75 330 115 220q15-42 65-42h165q45 0 70 55l42 97 25 20v110H60V350Z" ' + common + '/><path d="m145 220-32 100h295l-40-100q-10-25-45-25H185q-25 0-40 25Z" ' + common + '/><path d="M260 200v120" fill="none" stroke="#171717" stroke-width="8"/><circle cx="150" cy="455" r="48" ' + common + '/><circle cx="390" cy="455" r="48" ' + common + '/><circle cx="150" cy="455" r="18" ' + common + '/><circle cx="390" cy="455" r="18" ' + common + '/>',
+    train: '<rect x="75" y="170" width="340" height="300" rx="48" ' + common + '/><path d="M140 170V95h100v75m90 0v-45h55v45" ' + common + '/><rect x="115" y="220" width="100" height="100" rx="15" ' + common + '/><rect x="255" y="220" width="100" height="100" rx="15" ' + common + '/><path d="M75 370h340m-275 100v40m180-40v40" ' + common + '/><circle cx="155" cy="475" r="40" ' + common + '/><circle cx="350" cy="475" r="40" ' + common + '/>',
+    airplane: '<path d="M250 30 305 220l160 100v65L290 330l15 130 65 50v35l-120-40-120 40v-35l65-50 15-130L55 385v-65l160-100Z" ' + common + '/><path d="M250 30v500" fill="none" stroke="#171717" stroke-width="7"/>',
+    fish: '<ellipse cx="240" cy="260" rx="175" ry="125" ' + common + '/><path d="m395 260 105-95v190Z" ' + common + '/><path d="M235 135q-30-100-100-65 0 80 100 65m0 250q-30 100-100 65 0-80 100-65Z" ' + common + '/><circle cx="145" cy="235" r="18" ' + common + '/><circle cx="150" cy="235" r="7" fill="#171717"/><path d="M175 300q60 55 115 0" fill="none" stroke="#171717" stroke-width="8"/>',
+    octopus: '<path d="M110 300a150 145 0 1 1 300 0v35q0 60-35 95-35 30-70-5-35 55-70 5-35 45-70 5-50-40-55-135Z" ' + common + '/><path d="M130 405q-80 20-60 95 15 35 55 5m85-55q-55 60-15 115 30 25 55-15m45-90q-20 90 35 105 35 5 45-35m10-105q55 50 85 5 15-40-25-60" ' + common + '/><circle cx="220" cy="270" r="12" fill="#171717"/><circle cx="300" cy="270" r="12" fill="#171717"/><path d="M235 315q25 25 50 0" fill="none" stroke="#171717" stroke-width="8"/>',
+    whale: '<path d="M55 300q30-165 225-165 155 0 205 140-35 115-175 145Q135 470 55 300Z" ' + common + '/><path d="m430 275 65-80 5 175-70-40M170 365q75-80 135-5" ' + common + '/><circle cx="155" cy="265" r="13" fill="#171717"/><path d="M115 180q-25-80 30-120m10 105q15-80 80-100" fill="none" stroke="#171717" stroke-width="9" stroke-linecap="round"/>',
+    turtle: '<ellipse cx="255" cy="300" rx="155" ry="130" ' + common + '/><path d="M175 200q80-65 160 0m-160 200q80 65 160 0m-235-100h310" fill="none" stroke="#171717" stroke-width="8"/><circle cx="440" cy="290" r="65" ' + common + '/><circle cx="455" cy="275" r="9" fill="#171717"/><path d="M150 210 90 155 70 240m270-30 60-55 20 85M155 390l-60 65-20-85m270 20 60 65 20-85" ' + common + '/>',
+    castle: '<path d="M90 480V220h105v260m70 0V150h115v330m35 0V220h105v260Z" ' + common + '/><path d="M90 220v-75h30v30h35v-30h40v75m70-70V75h35v30h35V75h40v75m35 70v-75h30v30h35v-30h40v75" ' + common + '/><path d="M220 480V360q40-75 80 0v120" ' + common + '/><rect x="105" y="285" width="75" height="90" rx="32" ' + common + '/><rect x="375" y="285" width="75" height="90" rx="32" ' + common + '/>',
+    unicorn: '<path d="M115 360q-5-130 130-180 75-25 160 35l50 115-90 100-180 0Z" ' + common + '/><path d="m250 190 30-155 65 130" ' + common + '/><path d="M125 260q-85-40-80 90 20 60 85 25m230-135q100-50 115 65-5 80-90 70" ' + common + '/><circle cx="240" cy="310" r="12" fill="#171717"/><path d="M285 365q35 25 65-5m-190 25q-80 100-10 140 75-20 75-100" ' + common + '/>',
+    dinosaur: '<path d="M80 340q-10-145 145-175 105-20 165 65l90 20-25 100-100 10q-25 105-125 95l-25 75H135l20-100q-65-20-75-90Z" ' + common + '/><path d="m230 170 20-75 50 55 40-65 45 95M155 430l-25 100m185-100 10 100" ' + common + '/><circle cx="365" cy="260" r="12" fill="#171717"/><path d="M400 315q-25 20-50 0" fill="none" stroke="#171717" stroke-width="8"/>',
+    cupcake: '<path d="m120 265 280 0-45 240H165Z" ' + common + '/><path d="M125 265q-55-75 25-100 0-120 110-110 75-95 140 0 95 0 85 90 50 85-20 120Z" ' + common + '/><path d="M185 325h150m-165 65h180m-160 65h140" fill="none" stroke="#171717" stroke-width="8"/><circle cx="260" cy="180" r="16" ' + common + '/>',
+    house: '<path d="M60 270 260 85l200 185v245H60Z" ' + common + '/><rect x="205" y="355" width="110" height="160" rx="45" ' + common + '/><rect x="95" y="300" width="85" height="85" rx="12" ' + common + '/><rect x="340" y="300" width="85" height="85" rx="12" ' + common + '/><path d="M260 85V30h85v135" ' + common + '/>',
+    robot: '<rect x="130" y="60" width="260" height="180" rx="35" ' + common + '/><rect x="100" y="260" width="320" height="205" rx="35" ' + common + '/><circle cx="210" cy="150" r="24" ' + common + '/><circle cx="310" cy="150" r="24" ' + common + '/><path d="M220 205q40 35 80 0m-10-145V20m-40 445v65m120-65v65M100 315 35 365v90l80-45m285-95 65 50v90l-80-45" ' + common + '/><circle cx="260" cy="345" r="32" ' + common + '/>',
+    mushroom: '<path d="M115 260q-20-160 145-190 165 30 145 190Z" ' + common + '/><path d="M210 260q-20 85-35 220h180q-15-135-35-220" ' + common + '/><circle cx="190" cy="160" r="24" ' + common + '/><circle cx="275" cy="110" r="28" ' + common + '/><circle cx="350" cy="175" r="24" ' + common + '/><circle cx="235" cy="360" r="10" fill="#171717"/><circle cx="300" cy="360" r="10" fill="#171717"/>',
+    apple: '<path d="M260 170q-100-100-185 15-80 150 50 300 55 65 135 10 80 55 135-10 130-150 50-300-85-115-185-15Z" ' + common + '/><path d="M260 175q-25-100 55-145m-45 65q70-45 125 5-55 45-125-5Z" ' + common + '/>',
+    kite: '<path d="m260 35 170 190-170 230L90 225Z" ' + common + '/><path d="M260 35v420m-170-230h340m-170 0 65 75m-65-75-65 75" fill="none" stroke="#171717" stroke-width="8"/><path d="m260 455-55 65 55 35 55-35-55-65m0 100v45" ' + common + '/>',
+    balloon: '<path d="M260 35q-150 0-150 165 0 150 150 195 150-45 150-195Q410 35 260 35Z" ' + common + '/><path d="m235 390 25 50 25-50m-25 50v90" ' + common + '/><path d="M190 185q-10-70 45-95" fill="none" stroke="#171717" stroke-width="9" stroke-linecap="round"/>',
+    icecream: '<path d="m150 245 220 0-110 270Z" ' + common + '/><circle cx="205" cy="220" r="90" ' + common + '/><circle cx="315" cy="220" r="90" ' + common + '/><path d="M180 280 335 430m-120-20 100-110m-90 170 45-45" fill="none" stroke="#171717" stroke-width="7"/>',
+    pizza: '<path d="m65 100 390 65-195 340Z" ' + common + '/><path d="M65 100q85-90 195 0 110-20 195 65" fill="none" stroke="#171717" stroke-width="12"/><circle cx="220" cy="235" r="28" ' + common + '/><circle cx="335" cy="210" r="25" ' + common + '/><circle cx="250" cy="365" r="25" ' + common + '/><circle cx="150" cy="180" r="20" ' + common + '/>'
+  };
+  return drawings[scene] || drawings.flower;
+}
+
+function makeSvg(page, index, total, bookTitle) {
+  const scene = SCENES[page.scene] ? page.scene : "flower";
+  const title = safeText(page.title || SCENES[scene].title, 34);
+  const frame = '<rect x="24" y="24" width="752" height="952" rx="26" fill="white" stroke="#171717" stroke-width="5"/>';
+  const sparkles = '<path d="M130 230v-24m-12 12h24m485 15v-24m-12 12h24M150 760v-20m-10 10h20m470-20v-20m-10 10h20" stroke="#171717" stroke-width="6" stroke-linecap="round"/><circle cx="130" cy="390" r="8" fill="white" stroke="#171717" stroke-width="5"/><circle cx="670" cy="390" r="8" fill="white" stroke="#171717" stroke-width="5"/>';
+  const grass = '<path d="M90 820q20-35 40 0m15 0q20-35 40 0m380 0q20-35 40 0m15 0q20-35 40 0" fill="none" stroke="#171717" stroke-width="7" stroke-linecap="round"/>';
+  const cover = index === 0;
+  const heading = cover ? safeText(bookTitle || "My Coloring Book", 36) : title;
+  const subtitle = cover ? '<text x="400" y="175" text-anchor="middle" font-family="Arial,sans-serif" font-size="22" fill="#171717">A book made just for you</text>' : "";
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000"><rect width="800" height="1000" fill="white"/>' + frame +
+    '<text x="400" y="' + (cover ? 125 : 115) + '" text-anchor="middle" font-family="Arial,sans-serif" font-size="' + (cover ? 38 : 31) + '" font-weight="700" fill="#171717">' + esc(heading) + '</text>' + subtitle +
+    sparkles + '<g transform="translate(140 250) scale(1.0)">' + sceneArt(scene) + '</g>' + grass +
+    '<text x="400" y="925" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" fill="#171717">' + (index + 1) + ' / ' + total + '</text></svg>';
+}
+
+function renderBook(book) {
+  currentBook = book;
+  $("previewTitle").textContent = book.title;
+  $("previewMeta").textContent = book.pages.length + " pages · " + book.category + " · " + (book.aiUsed ? "planned with local AI" : "created with the built-in local planner");
+  pageGrid.innerHTML = "";
+  book.pages.forEach((page, index) => {
+    const card = document.createElement("article");
+    card.className = "page-card";
+    const img = document.createElement("img");
+    img.alt = "Coloring page " + (index + 1) + ": " + page.title;
+    img.loading = index > 7 ? "lazy" : "eager";
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(page.svg);
+    const strong = document.createElement("strong");
+    strong.textContent = (index + 1) + ". " + page.title;
+    const span = document.createElement("span");
+    span.textContent = page.scene;
+    card.append(img, strong, span);
+    pageGrid.append(card);
+  });
+  previewSection.style.display = "block";
+  previewSection.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const title = safeText($("bookTitle").value, 70) || "My Coloring Book";
+  const description = safeText($("bookDescription").value, 500);
+  const category = $("bookCategory").value;
+  const count = Math.max(8, Math.min(60, Number($("pageCount").value) || 20));
+  createButton.disabled = true;
+  createButton.textContent = "Planning your pages…";
+  try {
+    const fallback = makeFallbackPages(title, description, category, count);
+    let pages = fallback;
+    let aiUsed = false;
+    if (planner) {
+      try {
+        setModelProgress(100, "Planning page ideas on this device…");
+        pages = await askPlanner(title, description, category, count, fallback);
+        aiUsed = pages !== fallback;
+      } catch (error) {
+        pages = fallback;
+        toast("The local planner had trouble. I used the built-in page planner instead.");
+      }
+    }
+    createButton.textContent = "Drawing your pages…";
+    const book = {
+      title,
+      description,
+      category,
+      aiUsed,
+      pages: pages.map((page, index) => ({...page, svg:makeSvg(page,index,count,title)}))
+    };
+    renderBook(book);
+    toast(aiUsed ? "Your book is ready — planned with local AI." : "Your coloring book is ready.");
+  } catch (error) {
+    console.error(error);
+    toast("Something went wrong while making the book. Please try again.");
+  } finally {
+    createButton.disabled = false;
+    createButton.innerHTML = 'Create my coloring book <span aria-hidden="true">→</span>';
+  }
+});
+
+$("editButton").addEventListener("click", () => {
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+function loadScript(url) {
+  return new Promise((resolve,reject) => {
+    const existing = document.querySelector('script[data-doodle-lib="' + url + '"]');
+    if (existing) { existing.addEventListener("load",resolve,{once:true}); existing.addEventListener("error",reject,{once:true}); if (window.jspdf) resolve(); return; }
+    const script = document.createElement("script");
+    script.src = url;
+    script.async = true;
+    script.dataset.doodleLib = url;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error("Could not load the PDF library."));
+    document.head.append(script);
+  });
+}
+function svgToPng(svgText, width, height) {
+  return new Promise((resolve,reject) => {
+    const blob = new Blob([svgText],{type:"image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d",{alpha:false});
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0,0,width,height);
+        ctx.drawImage(img,0,0,width,height);
+        const data = canvas.toDataURL("image/png");
+        URL.revokeObjectURL(url);
+        resolve(data);
+      } catch (error) { URL.revokeObjectURL(url); reject(error); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("A page could not be prepared for PDF export.")); };
+    img.src = url;
+  });
+}
+pdfButton.addEventListener("click", async () => {
+  if (!currentBook) return;
+  pdfButton.disabled = true;
+  pdfButton.textContent = "Preparing PDF…";
+  try {
+    await loadScript("https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js");
+    const JsPDF = window.jspdf && window.jspdf.jsPDF;
+    if (!JsPDF) throw new Error("PDF tools did not load.");
+    const doc = new JsPDF({orientation:"portrait",unit:"mm",format:"letter",compress:true});
+    doc.setProperties({title:currentBook.title,subject:"Printable coloring book made with DoodlePress",creator:"DoodlePress"});
+    for (let i = 0; i < currentBook.pages.length; i++) {
+      if (i > 0) doc.addPage("letter","portrait");
+      const data = await svgToPng(currentBook.pages[i].svg,1224,1584);
+      doc.addImage(data,"PNG",0,0,215.9,279.4,undefined,"FAST");
+      pdfButton.textContent = "Building PDF " + (i + 1) + "/" + currentBook.pages.length;
+    }
+    const name = (currentBook.title || "DoodlePress-book").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "doodlepress-book";
+    doc.save(name + ".pdf");
+    toast("Your PDF is ready.");
+  } catch (error) {
+    console.error(error);
+    toast(error && error.message ? error.message : "PDF export failed. Try again.");
+  } finally {
+    pdfButton.disabled = false;
+    pdfButton.textContent = "Download PDF ↓";
+  }
+});
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
