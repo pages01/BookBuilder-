@@ -14,9 +14,11 @@ A small, static coloring-book maker designed for GitHub Pages and mobile Safari.
 
 ## Local planning model
 
-The app automatically selects and prepares **onnx-community/LFM2.5-350M-ONNX** through **Transformers.js 4.3** when the page opens. It uses WebGPU with q4f16 when a compatible adapter is available, otherwise it uses the default CPU/WASM backend with q4 weights. The model download is approximately 276 MB. The first setup needs an internet connection; model files are cached by the browser for reuse. No model picker or manual download button is required.
+The app automatically selects and prepares **onnx-community/LFM2.5-350M-ONNX** through **Transformers.js 4.3** when the page opens. It uses WebGPU with q4f16 when a compatible adapter is available, otherwise it uses the CPU/WASM backend with q4 weights. The model download is approximately 276 MB. The first setup needs an internet connection; subsequent visits check the Transformers.js browser cache and reuse the existing files rather than downloading another copy. The cache key stays stable between visits.
 
-The app does not send book descriptions to a DoodlePress server. Model inference happens in the browser after the files have been downloaded. iOS Safari may evict cached data to reclaim storage, so model persistence is best-effort rather than guaranteed.
+DoodlePress remembers which planner model it last loaded. If a future version switches to a different planner model or precision, it clears the previous DoodlePress model cache after the replacement has loaded successfully. It only clears the prior model recorded by DoodlePress, not unrelated model caches used by other sites. Browser-managed storage is still best-effort: iOS Safari can evict cached data to reclaim space.
+
+The app does not send book descriptions to a DoodlePress server. Model inference happens in the browser after the files have been downloaded. No model picker or manual download button is required.
 
 ## Artwork engine and image-model research
 
@@ -40,5 +42,5 @@ No build step or backend is required. Serve the app over HTTPS so Safari can use
 - Safari 26+ has WebGPU support in current Transformers.js releases; DoodlePress targets Safari 27 on iOS.
 - If WebGPU is unavailable or the planner model fails to load, the built-in local page planner still creates a book.
 - PDF generation loads jsPDF from jsDelivr the first time you export, so the first PDF export needs an internet connection.
-- The service worker caches the app shell only. Hugging Face model caching is handled by Transformers.js and browser storage.
+- The service worker caches the app shell only, serves HTML network-first, and removes obsolete DoodlePress shell caches on update. Hugging Face model caching is handled separately by Transformers.js and browser storage.
 - Saved books are stored in IndexedDB on the device. Clearing Safari website data can remove them.
