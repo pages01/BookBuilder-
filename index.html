@@ -209,11 +209,10 @@
       <aside class="side-stack">
         <section class="panel ai-card">
           <div class="ai-head"><h3>✧ Local AI page planner</h3><span class="status" id="modelStatus">NOT INSTALLED</span></div>
-          <p>The optional LFM2.5-350M model helps turn your description into a varied page-by-page plan. It runs on your device with WebGPU.</p>
-          <button class="model-button" id="downloadModel" type="button">Download planner · about 276 MB</button>
+          <p>DoodlePress chooses a compact language model automatically to plan your pages. It uses your device GPU when available, with a lighter compatibility fallback when needed.</p>
           <div class="progress" id="modelProgress"><span id="modelProgressBar"></span></div>
-          <div class="progress-label" id="modelProgressLabel">The model is only downloaded when you tap the button.</div>
-          <div class="small-print">After setup, planning can run without sending your book idea to a server. Your browser may remove cached model files to free space.</div>
+          <div class="progress-label" id="modelProgressLabel">DoodlePress automatically selects and prepares its small local planning model when the app opens. First setup is about 276 MB and needs internet; later visits reuse the browser cache.</div>
+          <div class="small-print">No model choices or manual downloads needed. Planning runs on this device after setup. Safari may occasionally clear cached files to free storage.</div>
           <div class="model-research"><strong>Next image model candidate: SD-Turbo (about 2.4 GB).</strong> This is a real text-to-image model, but full WebGPU memory use and iPhone Safari performance need device testing before enabling it. DoodlePress currently uses its printable vector engine for reliable pages.<br><button class="model-button" id="checkGpu" type="button" style="margin-top:9px">Check this device for WebGPU</button><div id="gpuStatus" style="margin-top:7px">This checks browser GPU access only, not whether a multi-gigabyte image model will fit.</div></div>
         </section>
         <section class="panel facts">
@@ -237,7 +236,7 @@
       <div class="small-print">Tip: On iPhone, use the Share menu after the PDF opens and choose Save to Files. Printing is easiest on US Letter paper.</div>
     </section>
 
-    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Local planner model: LFM2.5-350M-ONNX · Local artwork: generated SVG line art</div>
+    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Automatic local planner: LFM2.5-350M · Artwork: locally generated SVG line art</div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -399,57 +398,60 @@ function parseModelPages(text, fallback, count) {
   }
 }
 
+let plannerPromise = null;
 async function loadPlanner() {
   if (planner) return planner;
-  if (!navigator.gpu) throw new Error("WebGPU is not available in this browser session.");
-  modelButton.disabled = true;
-  modelButton.textContent = "Loading local AI…";
-  modelStatus.textContent = "DOWNLOADING";
-  setModelProgress(1, "Loading the model runtime…");
-  try {
-    const { pipeline, env } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0");
-    env.allowLocalModels = false;
-    env.useBrowserCache = true;
-    planner = await pipeline("text-generation", MODEL_ID, {
-      device: "webgpu",
-      dtype: "q4f16",
-      progress_callback: (info) => {
-        if (info && typeof info.progress === "number") {
-          const label = info.file ? "Downloading " + info.file : "Downloading model files…";
-          setModelProgress(info.progress, label);
-        } else if (info && info.status) {
-          setModelProgress(10, info.status);
-        }
+  if (plannerPromise) return plannerPromise;
+  plannerPromise = (async () => {
+    modelStatus.textContent = "PREPARING";
+    modelStatus.style.background = "";
+    modelStatus.style.color = "";
+    modelStatus.style.borderColor = "";
+    setModelProgress(1, "Choosing the best local setup for this browser…");
+    try {
+      const { pipeline, env } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0");
+      env.allowLocalModels = false;
+      env.useBrowserCache = true;
+      env.useWasmCache = true;
+      let device = "wasm";
+      let dtype = "q4";
+      if (navigator.gpu) {
+        try {
+          const adapter = await navigator.gpu.requestAdapter({powerPreference:"low-power"});
+          if (adapter) { device = "webgpu"; dtype = "q4f16"; }
+        } catch (_) {}
       }
-    });
-    modelStatus.textContent = "READY";
-    modelStatus.style.background = "#e5f6e9";
-    modelStatus.style.color = "#315744";
-    modelStatus.style.borderColor = "#cde9d5";
-    modelButton.textContent = "Local planner ready ✓";
-    modelProgressBar.style.width = "100%";
-    modelProgressLabel.textContent = "Ready on this device. The model can be reused from browser cache.";
-    return planner;
-  } catch (error) {
-    planner = null;
-    modelStatus.textContent = "NOT READY";
-    modelButton.disabled = false;
-    modelButton.textContent = "Try downloading again";
-    modelProgressLabel.textContent = error && error.message ? error.message : "The model could not be loaded.";
-    throw error;
-  }
+      setModelProgress(3, "Selected " + (device === "webgpu" ? "GPU acceleration" : "compatibility mode") + ". Preparing the local planner…");
+      planner = await pipeline("text-generation", MODEL_ID, {
+        device,
+        dtype,
+        progress_callback: (info) => {
+          if (info && typeof info.progress === "number") {
+            const label = info.file ? "Getting " + info.file : "Preparing local model files…";
+            setModelProgress(info.progress, label);
+          } else if (info && info.status) {
+            setModelProgress(10, info.status);
+          }
+        }
+      });
+      modelStatus.textContent = "READY";
+      modelStatus.style.background = "#e5f6e9";
+      modelStatus.style.color = "#315744";
+      modelStatus.style.borderColor = "#cde9d5";
+      modelProgressBar.style.width = "100%";
+      modelProgressLabel.textContent = "Your local planner is ready. Model files are cached by the browser for future visits.";
+      return planner;
+    } catch (error) {
+      planner = null;
+      modelStatus.textContent = "RETRY NEEDED";
+      modelProgressLabel.textContent = (error && error.message ? error.message : "The local model could not be prepared.") + " You can still create books with the built-in page planner.";
+      throw error;
+    } finally {
+      plannerPromise = null;
+    }
+  })();
+  return plannerPromise;
 }
-
-modelButton.addEventListener("click", async () => {
-  try {
-    await loadPlanner();
-    toast("Local page planner is ready.");
-  } catch (error) {
-    toast("The local model could not start. You can still make a book without it.");
-  } finally {
-    modelButton.disabled = false;
-  }
-});
 
 async function askPlanner(title, description, category, count, fallback, buildTime) {
   if (!planner) return fallback;
@@ -930,6 +932,13 @@ refreshLibraryCount().catch(() => {});
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
 }
+// Automatically prepare the selected starter model after the page is usable.
+// The browser cache keeps its files for later visits; no manual model picker is needed.
+window.addEventListener("load", () => {
+  window.setTimeout(() => {
+    loadPlanner().catch(error => console.warn("Local planner setup did not finish; built-in planning remains available.",error));
+  }, 900);
+}, {once:true});
 </script>
 </body>
 </html>
