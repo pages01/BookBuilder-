@@ -48,8 +48,6 @@
     .ai-head h3{font-size:14px;margin:0}
     .status{font-size:10px;font-weight:850;background:#fff;border:1px solid #ded8fa;padding:5px 8px;border-radius:99px;color:#6d61a5}
     .ai-card p{font-size:12px;color:#615c76;line-height:1.55;margin:12px 0}
-    .model-button{width:100%;border:1px solid #d8d0fa;background:#fff;color:#50467f;border-radius:11px;padding:11px 12px;font-size:12px;font-weight:850}
-    .model-button:disabled{opacity:.6;cursor:wait}
     .progress{height:7px;background:#dedaf0;border-radius:99px;overflow:hidden;margin-top:12px;display:none}
     .progress>span{height:100%;display:block;width:0;background:#8d7ddd;border-radius:99px;transition:width .2s}
     .progress-label{font-size:10px;color:#716b84;margin-top:6px;min-height:14px}
@@ -111,7 +109,6 @@
     .build-option label span{display:block;font-size:10px;line-height:1.4;color:var(--muted);font-weight:500}
     .build-option input:checked+label{border-color:#f18c80;background:#fff4f1;box-shadow:0 0 0 2px #ff786b22}
     .build-help{font-size:11px;line-height:1.5;color:var(--muted);margin-top:8px}
-    .model-research{margin-top:12px;padding:11px 12px;border-radius:11px;background:#fff9e9;border:1px solid #f1e5c7;color:#6c5d3f;font-size:10px;line-height:1.5}
     .build-progress{height:7px;border-radius:99px;background:#eee8df;overflow:hidden;display:none;margin-top:12px}
     .build-progress span{display:block;width:0;height:100%;background:var(--pink);transition:width .2s}
     @media(max-width:540px){
@@ -213,7 +210,6 @@
           <div class="progress" id="modelProgress"><span id="modelProgressBar"></span></div>
           <div class="progress-label" id="modelProgressLabel">DoodlePress automatically selects and prepares its small local planning model when the app opens. First setup is about 276 MB and needs internet; later visits reuse the browser cache.</div>
           <div class="small-print">No model choices or manual downloads needed. Planning runs on this device after setup. Safari may occasionally clear cached files to free storage.</div>
-          <div class="model-research"><strong>Next image model candidate: SD-Turbo (about 2.4 GB).</strong> This is a real text-to-image model, but full WebGPU memory use and iPhone Safari performance need device testing before enabling it. DoodlePress currently uses its printable vector engine for reliable pages.<br><button class="model-button" id="checkGpu" type="button" style="margin-top:9px">Check this device for WebGPU</button><div id="gpuStatus" style="margin-top:7px">This checks browser GPU access only, not whether a multi-gigabyte image model will fit.</div></div>
         </section>
         <section class="panel facts">
           <div class="fact"><div class="fact-icon" style="background:var(--pink2)">✎</div><div><strong>Made for coloring</strong><span>Bold outlines, roomy shapes, no color, and no busy backgrounds.</span></div></div>
@@ -740,30 +736,6 @@ async function refreshLibrary() {
     $("librarySummary").textContent = "Library unavailable";
   }
 }
-
-$("checkGpu").addEventListener("click",async () => {
-  const output = $("gpuStatus");
-  const button = $("checkGpu");
-  button.disabled = true;
-  output.textContent = "Checking browser GPU access…";
-  try {
-    if (!navigator.gpu) {
-      output.textContent = "WebGPU is not available in this browser session. The local vector artwork will still work.";
-      return;
-    }
-    const adapter = await navigator.gpu.requestAdapter({powerPreference:"high-performance"});
-    if (!adapter) {
-      output.textContent = "Safari exposes WebGPU, but no compatible GPU adapter was returned. The local vector artwork will still work.";
-      return;
-    }
-    const limit = adapter.limits && adapter.limits.maxTextureDimension2D ? adapter.limits.maxTextureDimension2D : "unknown";
-    output.textContent = "WebGPU adapter found. Maximum 2D texture: " + limit + ". This is encouraging, but it does not confirm SD-Turbo memory capacity or stability.";
-  } catch (error) {
-    output.textContent = "The WebGPU check could not complete. The built-in local artwork remains available.";
-  } finally {
-    button.disabled = false;
-  }
-});
 
 $("libraryOpen").addEventListener("click",openLibrary);
 $("libraryClose").addEventListener("click",closeLibrary);
