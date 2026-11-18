@@ -254,7 +254,6 @@
             <div class="progress" id="modelProgress"><span id="modelProgressBar"></span></div>
             <div class="progress-label" id="modelProgressLabel">Model setup status.</div>
           </section>
-          <div class="ai-storage-note" id="imageModelStatus">SketchForge is selected.</div>
         </div>
       </section>
     </div>
@@ -1307,38 +1306,50 @@ form.addEventListener("submit",async event=>{
       helperModel:"director",imageMode,pages:[],sources:[]
     };
     const usedSourceIds=new Set();
+    let skippedPages=0;
     for(let index=0;index<pages.length;index++) {
       const page=pages[index];
-      if(imageMode==="trace") {
-        createButton.textContent="Finding a reusable image "+(index+1)+" of "+count+"…";
-        const found=await findImageForPage(book,page,usedSourceIds);
-        page.sourceAsset=found.source;
-        createButton.textContent="Converting image "+(index+1)+" of "+count+"…";
-        const converted=await imageWorkerRequest("convert",{blob:found.blob},progress=>{
-          $("imageModelStatus").textContent=progress.message || "Converting source image to outlines…";
-        });
-        if(!converted.blob) throw new Error("ImageTrace returned no outline.");
-        page.aiImageData=await blobToDataUrl(converted.blob);
-        book.sources.push(found.source);
-      } else {
-        createButton.textContent="SketchForge drawing "+(index+1)+" of "+count+"…";
-        page.aiVectorMarkup=await generateOutlineMarkup(book,page,index);
+      try {
+        if(imageMode==="trace") {
+          createButton.textContent="Finding a reusable image "+(index+1)+" of "+count+"…";
+          const found=await findImageForPage(book,page,usedSourceIds);
+          page.sourceAsset=found.source;
+          createButton.textContent="Converting image "+(index+1)+" of "+count+"…";
+          const converted=await imageWorkerRequest("convert",{blob:found.blob},progress=>{
+            $("imageModelStatus").textContent=progress.message || "Converting source image to outlines…";
+          });
+          if(!converted.blob) throw new Error("ImageTrace returned no outline.");
+          page.aiImageData=await blobToDataUrl(converted.blob);
+          book.sources.push(found.source);
+        } else {
+          createButton.textContent="SketchForge drawing "+(index+1)+" of "+count+"…";
+          page.aiVectorMarkup=await generateOutlineMarkup(book,page,index);
+        }
+        if(!page.aiImageData && !page.aiVectorMarkup) throw new Error("No drawing was returned.");
+        book.pages.push({...page});
+      } catch(pageError) {
+        skippedPages++;
+        console.warn("DoodlePress skipped a page that could not be illustrated: "+page.title,pageError);
       }
-      // Never silently substitute the old built-in artwork for a failed AI drawing.
-      if(!page.aiImageData && !page.aiVectorMarkup) {
-        throw new Error("No new artwork was generated for page "+(index+1)+". The old built-in drawing has not been substituted.");
-      }
-      book.pages.push({...page,svg:makeSvg(page,index,count,title,category,buildTime)});
       buildProgressBar.style.width=Math.round(((index+1)/count)*100)+"%";
       await new Promise(resolve=>requestAnimationFrame(resolve));
     }
+    if(!book.pages.length) throw new Error("No coloring pages could be completed. Check the selected AI model and try again.");
+    // Re-number only the pages that were successfully drawn.
+    book.pages=book.pages.map((page,index)=>({...page,svg:makeSvg(page,index,book.pages.length,title,category,buildTime)}));
     book.coverSvg=makeCoverSvg(book);
     book.backSvg=makeBackCoverSvg(book);
-    let saved=false;
+    let saved=false,saveError=null;
     try { await saveBook(book); saved=true; }
-    catch(error) { console.warn("Book preview is ready, but browser storage could not save it.",error); }
+    catch(error) { saveError=error; console.warn("Could not save the new book to the library.",error); }
     renderBook(book);
-    toast(saved ? "Your book is ready and saved to your library." : "Your book is ready, but this browser could not save it.");
+    if(skippedPages) {
+      toast(book.pages.length+" pages are ready; "+skippedPages+" could not be illustrated and were left out.");
+    } else if(saved) {
+      toast("Your new book is ready and saved to My Library.");
+    } else {
+      toast("Your new book is open, but could not be saved: "+(saveError?.message || "browser storage unavailable."));
+    }
   } catch(error) {
     console.error(error);
     toast(error && error.message ? error.message : "Something went wrong while making the book. Please try again.");
