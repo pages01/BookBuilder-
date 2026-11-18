@@ -1,4 +1,4 @@
-const CACHE_NAME = "doodlepress-shell-v7";
+const CACHE_NAME = "doodlepress-shell-v8";
 const APP_FILES = ["./", "./index.html", "./image-worker.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
