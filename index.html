@@ -1233,29 +1233,6 @@ $("loadHelperButton").addEventListener("click",async()=>{
 });
 $("removeHelperButton").addEventListener("click",clearHelperCache);
 syncAiSettings();
-    planner = null;
-    plannerModelId = null;
-    try {
-      await loadPlanner();
-      toast(HELPER_MODELS[input.value].name + " is ready.");
-    } catch (_) {
-      toast("That helper could not load. The built-in page planner is still available.");
-    }
-  });
-});
-$("loadHelperButton").addEventListener("click",async () => {
-  $("loadHelperButton").disabled = true;
-  try {
-    await loadPlanner();
-    toast(HELPER_MODELS[getSelectedHelperModel()].name + " is ready.");
-  } catch (_) {
-    toast("The selected helper could not load. The built-in page planner will be used.");
-  } finally {
-    $("loadHelperButton").disabled = false;
-  }
-});
-$("removeHelperButton").addEventListener("click",clearHelperCache);
-syncAiSettings();
 syncImageSettings();
 $("libraryClose").addEventListener("click",closeLibrary);
 $("libraryOverlay").addEventListener("click",event => {
