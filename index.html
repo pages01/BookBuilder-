@@ -574,7 +574,7 @@ function syncImageSettings() {
 }
 function getImageWorker() {
   if (imageWorker) return imageWorker;
-  imageWorker = new Worker("./image-worker.js?v=3");
+  imageWorker = new Worker("./image-worker.js?v=4");
   imageWorker.addEventListener("message",event => {
     const message = event.data || {};
     const pending = imageRequests.get(message.id);
@@ -1422,7 +1422,7 @@ pdfButton.addEventListener("click", async () => {
 
 refreshLibraryCount().catch(() => {});
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=9", {updateViaCache:"none"}).catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=10", {updateViaCache:"none"}).catch(() => {}));
 }
 // Automatically prepare the selected starter model after the page is usable.
 // The browser cache keeps its files for later visits; no manual model picker is needed.
