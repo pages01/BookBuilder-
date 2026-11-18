@@ -773,16 +773,15 @@ function makeSvg(page, index, total, bookTitle, category, buildTime) {
   const frame = '<rect x="24" y="24" width="752" height="952" rx="26" fill="white" stroke="#171717" stroke-width="5"/>';
   const headerLine = '<path d="M95 192h610" fill="none" stroke="#171717" stroke-width="3" stroke-dasharray="5 13"/>';
   const sparkles = '<path d="M130 230v-24m-12 12h24m485 15v-24m-12 12h24M150 700v-20m-10 10h20m470-20v-20m-10 10h20" stroke="#171717" stroke-width="6" stroke-linecap="round"/><circle cx="130" cy="390" r="8" fill="white" stroke="#171717" stroke-width="5"/><circle cx="670" cy="390" r="8" fill="white" stroke="#171717" stroke-width="5"/>';
-  const cover = index === 0;
-  const heading = cover ? safeText(bookTitle || "My Coloring Book", 36) : title;
-  const subtitle = cover ? '<text x="400" y="165" text-anchor="middle" font-family="Arial,sans-serif" font-size="21" fill="#171717">A book made just for you</text>' : "";
+  const heading = title;
+  const subtitle = "";
   const number = '<text x="400" y="932" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" fill="#171717">' + (index + 1) + ' / ' + total + '</text>';
   const background = backgroundArt(category,index,buildTime);
   const detailLines = buildTime === "detailed"
     ? '<path d="M105 860q25-22 50 0m500 0q25-22 50 0M125 880q18-16 36 0m478 0q18-16 36 0" fill="none" stroke="#171717" stroke-width="5" stroke-linecap="round"/><circle cx="400" cy="875" r="5" fill="#171717"/>'
     : "";
   return '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000"><rect width="800" height="1000" fill="white"/>' + frame +
-    '<text x="400" y="' + (cover ? 115 : 120) + '" text-anchor="middle" font-family="Arial,sans-serif" font-size="' + (cover ? 35 : 29) + '" font-weight="700" fill="#171717">' + esc(heading) + '</text>' + subtitle + headerLine +
+    '<text x="400" y="120" text-anchor="middle" font-family="Arial,sans-serif" font-size="29" font-weight="700" fill="#171717">' + esc(heading) + '</text>' + subtitle + headerLine +
     background + sparkles + renderExtras(page,index,buildTime) + supportingObjects(page,category,index,buildTime) +
     '<g transform="translate(140 245) scale(1.0)">' + sceneArt(scene) + '</g>' + detailLines + number + '</svg>';
 }
