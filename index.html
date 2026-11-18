@@ -441,35 +441,42 @@ function makeFallbackPages(title, description, category, count) {
     "near a quiet garden","on a gentle adventure","beside a sparkling stream","among happy neighbors",
     "at a fun festival","on a special day","in a storybook world"
   ];
-  const extras = [["flower","sun"],["cloud","star"],["heart","bubble"],["leaf","flower"],["cloud","sun","star"],["bubble","leaf"]];
+  const extraPool = ["flower","cloud","star","heart","bubble","leaf","sun"];
   const pages = [];
   for (let i = 0; i < count; i++) {
     const scene = i === 0 ? matched : allowed[(i - 1 + (seed % allowed.length)) % allowed.length];
     const base = SCENES[scene] || SCENES.flower;
     const suffix = variants[(i + Math.floor(seed / 7)) % variants.length];
     const pageTitle = base.title + " " + suffix;
-    pages.push({title: pageTitle, scene, extras: extras[i % extras.length], note: base.title + " " + suffix + "."});
+    const firstExtra = Math.floor(i / 30) % extraPool.length;
+    const secondRank = Math.floor((i % 30) / 5);
+    const secondExtra = secondRank >= firstExtra ? secondRank + 1 : secondRank;
+    const remainingExtras = extraPool.map((_,index) => index).filter(index => index !== firstExtra && index !== secondExtra);
+    const thirdExtra = remainingExtras[i % 5];
+    const pageExtras = [extraPool[firstExtra],extraPool[secondExtra],extraPool[thirdExtra]];
+    pages.push({title:pageTitle,scene,extras:pageExtras,note:base.title + " " + suffix + "."});
   }
   return pages;
 }
 function uniquePageList(pages,backupPages,count) {
   const usedTitles = new Set();
+  const usedConcepts = new Set();
   const result = [];
   let backupIndex = 0;
-  const key = page => safeText(page.title,70).toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  const titleKey = page => safeText(page.title,70).toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  const conceptKey = page => (page.scene || "") + "|" + (Array.isArray(page.extras) ? page.extras.slice(0,4).join(",") : "");
+  const canAdd = page => {
+    const title = titleKey(page);
+    const concept = conceptKey(page);
+    return !!title && !usedTitles.has(title) && !usedConcepts.has(concept);
+  };
   for (let i=0;i<count;i++) {
     let page = pages[i] || backupPages[i % backupPages.length];
-    let titleKey = key(page);
-    if (!titleKey || usedTitles.has(titleKey)) {
+    if (!canAdd(page)) {
       page = null;
       while (backupIndex < backupPages.length) {
         const candidate = backupPages[backupIndex++];
-        const candidateKey = key(candidate);
-        if (candidateKey && !usedTitles.has(candidateKey)) {
-          page = candidate;
-          titleKey = candidateKey;
-          break;
-        }
+        if (canAdd(candidate)) { page = candidate; break; }
       }
     }
     if (!page) {
@@ -480,10 +487,10 @@ function uniquePageList(pages,backupPages,count) {
         suffix++;
         title = safeText(base.title,48) + " idea " + suffix;
       }
-      page = {...base,title};
-      titleKey = key(page);
+      page = {...base,title,extras:[...base.extras,"sun"].slice(0,4)};
     }
-    usedTitles.add(titleKey);
+    usedTitles.add(titleKey(page));
+    usedConcepts.add(conceptKey(page));
     result.push(page);
   }
   return result;
