@@ -168,7 +168,8 @@
         </div>
         <span>DoodlePress</span>
       </div>
-      <div class="top-actions">\n        <button class="advanced-open" id="aiOpen" type="button" aria-haspopup="dialog" aria-controls="aiOverlay">✦ Advanced AI</button>
+      <div class="top-actions">
+        <button class="advanced-open" id="aiOpen" type="button" aria-haspopup="dialog" aria-controls="aiOverlay">✦ Advanced AI</button>
         <button class="library-open" id="libraryOpen" type="button" aria-haspopup="dialog" aria-controls="libraryOverlay">
           <span aria-hidden="true">▤</span> My library <span class="count" id="libraryCount">0</span>
         </button>
@@ -199,7 +200,7 @@
             <p class="ai-explain">Choose what actually draws the coloring pages. Neural models run locally on your device after their first download.</p>
             <div class="model-choice-list" id="imageModelChoices">
               <label class="model-option selected" for="imageVector"><input type="radio" name="imageModel" id="imageVector" value="vector" checked><span class="model-radio-dot"></span><div class="model-copy"><strong>DoodlePress Vector Art</strong><span>Instant built-in SVG line art. Small files, crisp print quality, and works without WebGPU.</span></div><span class="model-pill active">READY</span></label>
-              <label class="model-option" for="imageSdTurbo"><input type="radio" name="imageModel" id="imageSdTurbo" value="sd-turbo"><span class="model-radio-dot"></span><div class="model-copy"><strong>Stable Diffusion Turbo</strong><span>Neural image generation · About 2.4 GB · 512×512 · Requires WebGPU. Creates a fresh illustration for every page.</span></div><span class="model-pill">WEBGPU</span></label>
+              <label class="model-option" for="imageSdTurbo"><input type="radio" name="imageModel" id="imageSdTurbo" value="sd-turbo"><span class="model-radio-dot"></span><div class="model-copy"><strong>Stable Diffusion Turbo</strong><span>Neural image generation · About 2.6 GB · 512×512 · WebGPU required. The source weights are non-commercial, so use this for personal projects only.</span></div><span class="model-pill">WEBGPU</span></label>
               <label class="model-option" for="imageJanus"><input type="radio" name="imageModel" id="imageJanus" value="janus-pro-1b"><span class="model-radio-dot"></span><div class="model-copy"><strong>Janus-Pro-1B</strong><span>Advanced neural image generation · About 2.3 GB · Requires WebGPU and more memory.</span></div><span class="model-pill">ADVANCED</span></label>
             </div>
             <div class="ai-control-row"><span id="imageSelectionState">DoodlePress Vector Art selected</span><button class="secondary" id="prepareImageButton" type="button">Prepare selected</button><button class="secondary" id="unloadImageButton" type="button">Unload image model</button><button class="secondary delete-design" id="clearImageCacheButton" type="button">Clear SD-Turbo cache</button></div>
