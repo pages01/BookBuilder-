@@ -14,7 +14,7 @@ A small, static coloring-book maker designed for GitHub Pages and mobile Safari.
 
 ## Local planning model
 
-The optional language planner is **onnx-community/LFM2.5-350M-ONNX** through **Transformers.js 4.3**. It requests the 4-bit q4f16 variant and uses WebGPU. The selected quantized model is approximately 276 MB. The first model setup needs an internet connection; model files are fetched from Hugging Face and cached by the browser for reuse.
+The app automatically selects and prepares **onnx-community/LFM2.5-350M-ONNX** through **Transformers.js 4.3** when the page opens. It uses WebGPU with q4f16 when a compatible adapter is available, otherwise it uses the default CPU/WASM backend with q4 weights. The model download is approximately 276 MB. The first setup needs an internet connection; model files are cached by the browser for reuse. No model picker or manual download button is required.
 
 The app does not send book descriptions to a DoodlePress server. Model inference happens in the browser after the files have been downloaded. iOS Safari may evict cached data to reclaim storage, so model persistence is best-effort rather than guaranteed.
 
