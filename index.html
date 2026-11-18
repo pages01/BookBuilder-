@@ -338,7 +338,7 @@ const KEYWORDS = [
 
 function chooseScene(text, allowed) {
   for (const item of KEYWORDS) {
-    if (item[1].test(text) && SCENES[item[0]]) return item[0];
+    if (item[1].test(text) && SCENES[item[0]] && allowed.includes(item[0])) return item[0];
   }
   return allowed[0];
 }
@@ -361,7 +361,7 @@ function makeFallbackPages(title, description, category, count) {
   const variants = titleVariations[category] || titleVariations.General;
   const pages = [];
   for (let i = 0; i < count; i++) {
-    const scene = i === 0 ? matched : allowed[(i * 3 + (seed % allowed.length)) % allowed.length];
+    const scene = i === 0 ? matched : allowed[(i - 1 + (seed % allowed.length)) % allowed.length];
     const base = SCENES[scene] || SCENES.flower;
     const suffix = variants[(i + Math.floor(seed / 7)) % variants.length];
     const pageTitle = i === 0 ? base.title : base.title + " " + suffix;
