@@ -124,6 +124,39 @@
       .library-drawer{height:100dvh;width:100%;max-height:100dvh;border-radius:0;border:0}
     }
 
+    .advanced-open{border:1px solid #d9d2fa;background:#f1efff;color:#4e4387;border-radius:12px;padding:9px 13px;font-size:12px;font-weight:850;display:flex;align-items:center;gap:7px}
+    .ai-settings-overlay{position:fixed;inset:0;background:#211f1db8;z-index:32;display:none;align-items:flex-start;justify-content:flex-end;padding:12px}
+    .ai-settings-overlay.open{display:flex}
+    .ai-settings-drawer{width:min(540px,100%);height:min(900px,calc(100dvh - 24px));background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 90px #0003;display:flex;flex-direction:column;overflow:hidden}
+    .ai-settings-content{padding:16px 18px 22px;overflow:auto;display:grid;gap:22px}
+    .ai-group{display:grid;gap:10px}
+    .ai-group-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .ai-group-heading h3{margin:0;font-size:15px;letter-spacing:-.2px}
+    .ai-explain{font-size:11px;line-height:1.55;color:var(--muted);margin:0}
+    .model-choice-list{display:grid;gap:9px}
+    .model-option{position:relative;display:grid;grid-template-columns:17px minmax(0,1fr) auto;gap:10px;align-items:center;padding:13px;border:1px solid var(--line);background:#fffefa;border-radius:14px;cursor:pointer}
+    .model-option input{position:absolute;opacity:0;pointer-events:none}
+    .model-option.selected{border-color:#9c8ee8;background:#f5f2ff;box-shadow:0 0 0 2px #9c8ee822}
+    .model-option.unavailable{cursor:not-allowed;opacity:.78;background:#f6f3ee}
+    .model-radio-dot{width:15px;height:15px;border:1.5px solid #aaa39a;border-radius:50%;display:block;position:relative}
+    .model-option.selected .model-radio-dot{border:5px solid #8a79d2}
+    .model-copy{min-width:0}
+    .model-copy strong{font-size:12px;display:block;margin-bottom:4px}
+    .model-copy span{font-size:10px;line-height:1.45;color:var(--muted);display:block}
+    .model-pill{font-size:9px;font-weight:850;letter-spacing:.25px;white-space:nowrap;padding:5px 7px;border:1px solid var(--line);border-radius:99px;background:#f5f1e9;color:#71695e}
+    .model-pill.active{background:#e6f4e9;border-color:#cde7d2;color:#315744}
+    .ai-control-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .ai-control-row>span{flex:1 1 100%;font-size:11px;font-weight:750;color:#5d576c}
+    .ai-control-row button{font-size:10px;padding:8px 10px}
+    .ai-storage-note{font-size:10px;line-height:1.5;color:var(--muted)}
+    @media(max-width:540px){
+      .top-actions{flex-direction:column;align-items:flex-end}
+      .advanced-open,.library-open{padding:8px 10px;font-size:10px}
+      .ai-settings-overlay{padding:0;align-items:stretch}
+      .ai-settings-drawer{height:100dvh;width:100%;max-height:100dvh;border-radius:0;border:0}
+      .model-option{grid-template-columns:16px minmax(0,1fr);gap:9px}
+      .model-option>.model-pill{grid-column:2;justify-self:start}
+    }
   </style>
 </head>
 <body>
@@ -135,7 +168,7 @@
         </div>
         <span>DoodlePress</span>
       </div>
-      <div class="top-actions">
+      <div class="top-actions">\n        <button class="advanced-open" id="aiOpen" type="button" aria-haspopup="dialog" aria-controls="aiOverlay">✦ Advanced AI</button>
         <button class="library-open" id="libraryOpen" type="button" aria-haspopup="dialog" aria-controls="libraryOverlay">
           <span aria-hidden="true">▤</span> My library <span class="count" id="libraryCount">0</span>
         </button>
@@ -154,6 +187,63 @@
       </section>
     </div>
 
+    <div class="ai-settings-overlay" id="aiOverlay" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+      <section class="ai-settings-drawer">
+        <div class="library-header">
+          <div><h2 id="aiTitle">Advanced AI</h2><p>Choose and manage the models DoodlePress uses on this device.</p></div>
+          <button class="library-close" id="aiClose" type="button" aria-label="Close AI settings">×</button>
+        </div>
+        <div class="ai-settings-content">
+          <section class="ai-group">
+            <div class="ai-group-heading"><h3>Image generation</h3><span class="model-pill active">1 AVAILABLE</span></div>
+            <p class="ai-explain">These engines create the actual drawings. The first option works now; the neural models are listed as upcoming options and are not falsely presented as installed.</p>
+            <div class="model-choice-list">
+              <div class="model-option selected">
+                <span class="model-radio-dot"></span>
+                <div class="model-copy"><strong>DoodlePress Vector Art</strong><span>Available now · No model download. Crisp, clean outlines that print sharply and work well on iPhone.</span></div>
+                <span class="model-pill active">ACTIVE</span>
+              </div>
+              <div class="model-option unavailable" aria-disabled="true">
+                <span class="model-radio-dot"></span>
+                <div class="model-copy"><strong>SD-Turbo · ONNX WebGPU</strong><span>Neural text-to-image generation in the browser. A separate diffusion runtime and a large first download are still needed before DoodlePress can use it.</span></div>
+                <span class="model-pill">COMING SOON</span>
+              </div>
+              <div class="model-option unavailable" aria-disabled="true">
+                <span class="model-radio-dot"></span>
+                <div class="model-copy"><strong>Sana 0.6B · ONNX WebGPU</strong><span>A more advanced neural image model. Its model files total several gigabytes and it targets devices with a powerful WebGPU graphics processor; not suitable for most phones.</span></div>
+                <span class="model-pill">EXPERIMENTAL</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="ai-group">
+            <div class="ai-group-heading"><h3>Helper AI · page planner</h3><span class="model-pill active">2 MODELS</span></div>
+            <p class="ai-explain">The helper plans distinct page ideas and scenes. It does not draw the pictures. Choose the model that fits your device.</p>
+            <div class="model-choice-list" id="helperChoices">
+              <label class="model-option selected" for="helperLfm">
+                <input type="radio" name="helperModel" id="helperLfm" value="lfm" checked>
+                <span class="model-radio-dot"></span>
+                <div class="model-copy"><strong>LFM2.5-350M · Lightweight</strong><span>About 276 MB. Smaller download and a good default for phones and quick planning.</span></div>
+                <span class="model-pill" id="lfmState">DEFAULT</span>
+              </label>
+              <label class="model-option" for="helperQwen">
+                <input type="radio" name="helperModel" id="helperQwen" value="qwen">
+                <span class="model-radio-dot"></span>
+                <div class="model-copy"><strong>Qwen3-0.6B · Advanced</strong><span>About 570 MB with WebGPU or 920 MB with the CPU model. A larger helper for more varied page planning, with a higher memory cost.</span></div>
+                <span class="model-pill">LARGER</span>
+              </label>
+            </div>
+            <div class="ai-control-row">
+              <span id="helperSelectionState">LFM2.5-350M selected</span>
+              <button class="secondary" id="loadHelperButton" type="button">Prepare selected</button>
+              <button class="secondary delete-design" id="removeHelperButton" type="button">Remove saved helper</button>
+            </div>
+            <div class="ai-storage-note" id="aiHelperStatus">The selected helper is prepared automatically when DoodlePress opens. Downloaded files stay in this browser cache until the browser clears them or you remove the saved helper.</div>
+          </section>
+          <div class="notice"><strong>Privacy:</strong> Helper-model inference and the current vector artwork run in your browser. The two neural image models above are not connected yet, so selecting them is not possible until their separate generation pipeline is added.</div>
+        </div>
+      </section>
+    </div>
 
     <section class="hero">
       <div class="eyebrow"><span>✦</span> A little creativity goes a long way</div>
@@ -182,9 +272,9 @@
               </select>
             </div>
             <div class="field">
-              <label for="pageCount">Number of pages</label>
+              <label for="pageCount">Number of coloring pages</label>
               <select id="pageCount" name="pageCount">
-                <option value="8">8 pages</option><option value="12">12 pages</option><option value="20" selected>20 pages</option><option value="30">30 pages</option><option value="40">40 pages</option><option value="60">60 pages</option>
+                <option value="8">8 coloring pages</option><option value="12">12 coloring pages</option><option value="20" selected>20 coloring pages</option><option value="30">30 coloring pages</option><option value="40">40 coloring pages</option><option value="60">60 coloring pages</option>
               </select>
             </div>
           </div>
@@ -206,10 +296,10 @@
       <aside class="side-stack">
         <section class="panel ai-card">
           <div class="ai-head"><h3>✧ Local AI page planner</h3><span class="status" id="modelStatus">NOT INSTALLED</span></div>
-          <p>DoodlePress chooses a compact language model automatically to plan your pages. It uses your device GPU when available, with a lighter compatibility fallback when needed.</p>
+          <p>Choose your page-planning helper in Advanced AI. DoodlePress runs it on this device and uses WebGPU when supported, with a CPU fallback when needed.</p>
           <div class="progress" id="modelProgress"><span id="modelProgressBar"></span></div>
-          <div class="progress-label" id="modelProgressLabel">DoodlePress automatically selects and prepares its small local planning model when the app opens. First setup is about 276 MB and needs internet; later visits reuse the browser cache.</div>
-          <div class="small-print">No model choices or manual downloads needed. Planning runs on this device after setup. Safari may occasionally clear cached files to free storage.</div>
+          <div class="progress-label" id="modelProgressLabel">Your selected helper is prepared on this device. Its first setup needs an internet connection; later visits reuse the browser cache.</div>
+          <div class="small-print">Open Advanced AI to switch between helper models or remove the saved helper files. Safari may occasionally clear cached files to free storage.</div>
         </section>
         <section class="panel facts">
           <div class="fact"><div class="fact-icon" style="background:var(--pink2)">✎</div><div><strong>Made for coloring</strong><span>Bold outlines, roomy shapes, no color, and no busy backgrounds.</span></div></div>
@@ -232,12 +322,16 @@
       <div class="small-print">Tip: On iPhone, use the Share menu after the PDF opens and choose Save to Files. Printing is easiest on US Letter paper.</div>
     </section>
 
-    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Automatic local planner: LFM2.5-350M · Artwork: locally generated SVG line art</div>
+    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Helper AI: LFM2.5-350M or Qwen3-0.6B · Artwork: locally generated vector line art</div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module">
-const MODEL_ID = "onnx-community/LFM2.5-350M-ONNX";
+const HELPER_MODELS = {
+  lfm: {id:"onnx-community/LFM2.5-350M-ONNX", name:"LFM2.5-350M", size:"about 276 MB", detail:"Small and quick. Best for a lighter download and everyday page planning."},
+  qwen: {id:"onnx-community/Qwen3-0.6B-ONNX", name:"Qwen3-0.6B", size:"about 570–920 MB", detail:"A larger helper with more room for varied page ideas. It needs more storage and memory."}
+};
+const HELPER_PREFERENCE_KEY = "doodlepress-helper-model";
 let planner = null;
 let currentBook = null;
 let toastTimer = null;
@@ -920,7 +1014,7 @@ pdfButton.addEventListener("click", async () => {
 
 refreshLibraryCount().catch(() => {});
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=4", {updateViaCache:"none"}).catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=5", {updateViaCache:"none"}).catch(() => {}));
 }
 // Automatically prepare the selected starter model after the page is usable.
 // The browser cache keeps its files for later visits; no manual model picker is needed.
