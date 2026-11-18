@@ -452,6 +452,43 @@ function makeFallbackPages(title, description, category, count) {
   }
   return pages;
 }
+function uniquePageList(pages,backupPages,count) {
+  const usedTitles = new Set();
+  const result = [];
+  let backupIndex = 0;
+  const key = page => safeText(page.title,70).toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+  for (let i=0;i<count;i++) {
+    let page = pages[i] || backupPages[i % backupPages.length];
+    let titleKey = key(page);
+    if (!titleKey || usedTitles.has(titleKey)) {
+      page = null;
+      while (backupIndex < backupPages.length) {
+        const candidate = backupPages[backupIndex++];
+        const candidateKey = key(candidate);
+        if (candidateKey && !usedTitles.has(candidateKey)) {
+          page = candidate;
+          titleKey = candidateKey;
+          break;
+        }
+      }
+    }
+    if (!page) {
+      const base = backupPages[i % backupPages.length];
+      let suffix = i + 1;
+      let title = safeText(base.title,48) + " idea " + suffix;
+      while (usedTitles.has(title.toLowerCase())) {
+        suffix++;
+        title = safeText(base.title,48) + " idea " + suffix;
+      }
+      page = {...base,title};
+      titleKey = key(page);
+    }
+    usedTitles.add(titleKey);
+    result.push(page);
+  }
+  return result;
+}
+
 function extractModelText(output) {
   let value = output && output[0] ? output[0].generated_text : "";
   if (Array.isArray(value)) {
