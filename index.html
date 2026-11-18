@@ -213,7 +213,7 @@
     <div class="ai-settings-overlay" id="aiOverlay" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
       <section class="ai-settings-drawer">
         <div class="library-header">
-          <div><h2 id="aiTitle">Advanced AI</h2><p>Choose and manage the models DoodlePress uses on this device.</p></div>
+          <div><h2 id="aiTitle">Advanced AI</h2><p>Manage your coloring-book AI tools.</p></div>
           <button class="library-close" id="aiClose" type="button" aria-label="Close AI settings">×</button>
         </div>
         <div class="ai-settings-content">
@@ -249,9 +249,12 @@
               <button class="secondary" id="loadHelperButton" type="button">Prepare organizer</button>
               <button class="secondary delete-design" id="removeHelperButton" type="button">Remove saved organizer</button>
             </div>
-            <div class="ai-storage-note" id="aiHelperStatus">The organizer downloads automatically and is cached by this browser for later visits.</div>
+            <div class="ai-storage-note" id="aiHelperStatus">Organizer status appears here.</div>
+            <div class="ai-control-row"><span id="modelStatus" class="model-pill">NOT INSTALLED</span></div>
+            <div class="progress" id="modelProgress"><span id="modelProgressBar"></span></div>
+            <div class="progress-label" id="modelProgressLabel">Model setup status.</div>
           </section>
-          <div class="notice"><strong>Privacy and image rights:</strong> SketchForge draws from your text locally. ImageTrace searches Openverse online and requests only CC0 and public-domain-marked images, then converts the chosen image locally. Openverse license labels can be incomplete or incorrect, so verify each source before commercial use.</div>
+          <div class="ai-storage-note" id="imageModelStatus">SketchForge is selected.</div>
         </div>
       </section>
     </div>
@@ -296,27 +299,17 @@
               <div class="build-option"><input type="radio" id="buildBalanced" name="buildTime" value="balanced" checked><label for="buildBalanced"><strong>Balanced</strong><span>Extra props and scenery</span></label></div>
               <div class="build-option"><input type="radio" id="buildDetailed" name="buildTime" value="detailed"><label for="buildDetailed"><strong>Detailed</strong><span>More layers and little details</span></label></div>
             </div>
-            <div class="build-help">More build effort adds richer backgrounds and extra objects to each page. Actual time depends on page count and device speed.</div>
           </div>
           <div class="build-progress" id="buildProgress"><span id="buildProgressBar"></span></div>
           <button id="createButton" class="primary" type="submit">Create my coloring book <span aria-hidden="true">→</span></button>
-          <div class="small-print">You can create a book immediately with the built-in local art engine. Downloading the planner adds AI-generated page ideas.</div>
         </form>
       </section>
 
       <aside class="side-stack">
-        <section class="panel ai-card">
-          <div class="ai-head"><h3>✧ Local AI page planner</h3><span class="status" id="modelStatus">NOT INSTALLED</span></div>
-          <p>Choose your page-planning helper in Advanced AI. DoodlePress runs it on this device and uses WebGPU when supported, with a CPU fallback when needed.</p>
-          <div class="progress" id="modelProgress"><span id="modelProgressBar"></span></div>
-          <div class="progress-label" id="modelProgressLabel">Your selected helper is prepared on this device. Its first setup needs an internet connection; later visits reuse the browser cache.</div>
-          <div class="small-print">Open Advanced AI to switch between helper models or remove the saved helper files. Safari may occasionally clear cached files to free storage.</div>
-        </section>
         <section class="panel facts">
           <div class="fact"><div class="fact-icon" style="background:var(--pink2)">✎</div><div><strong>Made for coloring</strong><span>Bold outlines, roomy shapes, no color, and no busy backgrounds.</span></div></div>
           <div class="fact"><div class="fact-icon" style="background:var(--gold)">▢</div><div><strong>Print-friendly pages</strong><span>Clean vector artwork, arranged for standard US Letter paper.</span></div></div>
           <div class="fact"><div class="fact-icon" style="background:var(--mint)">⌂</div><div><strong>Runs in your browser</strong><span>No account, image uploads, or cloud generation service.</span></div></div>
-          <div class="notice"><strong>About the drawings:</strong> The first version uses a lightweight local vector-art engine rather than a multi-gigabyte image model. That keeps the pages crisp and the experience practical on iPhone.</div>
         </section>
       </aside>
     </div>
@@ -333,7 +326,7 @@
       <div class="small-print">Tip: On iPhone, use the Share menu after the PDF opens and choose Save to Files. Printing is easiest on US Letter paper.</div>
     </section>
 
-    <div class="footer">DoodlePress · Your idea stays on your device · Made for little artists<br>Organizer: DoodlePress Storybook Director · Artwork: ImageTrace or SketchForge</div>
+    <div class="footer">DoodlePress · Made for little artists</div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -676,7 +669,7 @@ function svgNumber(value,minimum=0,maximum=512) {
   return String(Math.max(minimum,Math.min(maximum,number)));
 }
 function makeGeneratedArtMarkup(spec) {
-  if(!spec || !Array.isArray(spec.shapes) || spec.shapes.length<5) return null;
+  if(!spec || !Array.isArray(spec.shapes) || spec.shapes.length<1) return null;
   const safePath=/^[MmLlHhVvCcSsQqTtAaZz0-9eE.,+\-\s]+$/;
   const safePoints=/^[0-9eE.,+\-\s]+$/;
   const markup=[];
@@ -704,9 +697,9 @@ function makeGeneratedArtMarkup(spec) {
       markup.push('<'+type+' points="'+shape.points+'"'+common+'/>');
     }
   }
-  return markup.length>=5 ? markup.join("") : null;
+  return markup.length>=1 ? markup.join("") : null;
 }
-const SKETCHFORGE_INSTRUCTIONS = "You are DoodlePress SketchForge, a vector illustrator for printable children's coloring books. Draw a complete original scene from the user's description. Return only strict JSON, no markdown and no XML. The schema is {\"shapes\":[{\"type\":\"path\",\"d\":\"M...\",\"strokeWidth\":7,\"fill\":\"none\"},{\"type\":\"circle\",\"cx\":256,\"cy\":256,\"r\":40,\"strokeWidth\":7,\"fill\":\"white\"}]}. Allowed shape types: path, circle, ellipse, rect, line, polyline, polygon. Use only SVG path commands and numbers in path data. Coordinate space is 0 to 512 in both directions. Draw 8 to 20 well-composed shapes. Use thick black strokes, rounded joins, and white or no fills; tiny black fills are allowed only for eyes or tiny details. Make a large recognizable main subject, expressive friendly features, clear closed contours, and a few helpful background objects. Leave large open areas that children can color. Keep every important object inside the page. No text, letters, gradients, shading, hatching, gray fills, color, logos, borders, or watermarks. Avoid tiny clutter.";
+const SKETCHFORGE_INSTRUCTIONS = "You are DoodlePress SketchForge, an illustrator that creates original black-and-white coloring-book vector art. Return only valid compact JSON in this format: {\"shapes\":[{\"type\":\"path\",\"d\":\"M 120 160 C ... Z\",\"strokeWidth\":8,\"fill\":\"white\"}]}. Use 1 to 6 large meaningful shapes only. A single well-drawn path may contain the entire main character. Coordinate space is 0 to 512. Allowed types: path, circle, ellipse, rect, line, polyline, polygon. Use thick black outlines, round joins, white or no fills, and big open coloring areas. Make the main subject recognizable and centered, with at most a few background details. No gray, shading, hatch, gradients, text, or tiny clutter. Path data may contain only normal SVG path commands and numbers.";
 async function generateOutlineMarkup(book,page,index) {
   if(!planner) throw new Error("Storybook Director is not loaded, so SketchForge cannot draw this page.");
   const scene=SCENES[page.scene]?.title || page.scene || "a friendly character";
@@ -714,19 +707,27 @@ async function generateOutlineMarkup(book,page,index) {
     ". Overall theme: "+book.description+". Page scene: "+page.title+
     ". Main subject: "+scene+". Extra details: "+(page.extras||[]).join(", ")+
     ". Detail level: "+book.buildTime+". Use a fresh composition and do not draw words or page numbers.";
-  const result=await planner([
-    {role:"system",content:SKETCHFORGE_INSTRUCTIONS},
-    {role:"user",content:prompt}
-  ],{max_new_tokens:620,do_sample:true,temperature:0.38,top_p:0.86});
-  const raw=extractModelText(result);
-  const start=raw.indexOf("{"),end=raw.lastIndexOf("}");
-  if(start<0 || end<=start) throw new Error("SketchForge did not return a valid drawing. Try a simpler page description.");
-  let spec;
-  try { spec=JSON.parse(raw.slice(start,end+1)); }
-  catch(_) { throw new Error("SketchForge returned incomplete drawing data. Try again or simplify the page description."); }
-  const markup=makeGeneratedArtMarkup(spec);
-  if(!markup) throw new Error("SketchForge could not create enough usable outline shapes for this page. Try again or use ImageTrace.");
-  return markup;
+  let lastError=null;
+  for(let attempt=0;attempt<3;attempt++) {
+    const retryNote=attempt===0 ? "" : " Keep the JSON short and valid. Use one complete main outline path and only a few extra shapes.";
+    try {
+      const result=await planner([
+        {role:"system",content:SKETCHFORGE_INSTRUCTIONS},
+        {role:"user",content:prompt+retryNote}
+      ],{max_new_tokens:900,do_sample:attempt===0,temperature:attempt===0?0.25:0.12,top_p:0.82});
+      const raw=extractModelText(result);
+      const start=raw.indexOf("{"),end=raw.lastIndexOf("}");
+      if(start<0 || end<=start) throw new Error("Invalid drawing response.");
+      const spec=JSON.parse(raw.slice(start,end+1));
+      const markup=makeGeneratedArtMarkup(spec);
+      if(markup) return markup;
+      throw new Error("No usable vector shapes were returned.");
+    } catch(error) {
+      lastError=error;
+      console.warn("SketchForge drawing attempt "+(attempt+1)+" failed.",error);
+    }
+  }
+  throw new Error("SketchForge couldn't finish this page after three attempts. Please try creating the book again.");
 }
 function syncAiSettings() {
   syncImageSettings();
