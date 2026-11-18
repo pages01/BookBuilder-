@@ -965,13 +965,13 @@ async function refreshLibrary() {
       const img = document.createElement("img");
       img.className = "library-thumb";
       img.alt = "Preview of " + book.title;
-      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(book.pages?.[0]?.svg || "");
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(book.coverSvg || book.pages?.[0]?.svg || "");
       const body = document.createElement("div");
       const heading = document.createElement("h3");
       heading.textContent = book.title || "Untitled coloring book";
       const desc = document.createElement("p");
       const date = book.savedAt ? new Date(book.savedAt).toLocaleDateString() : "Saved on this device";
-      desc.textContent = (book.pages?.length || 0) + " pages · " + (book.category || "General") + " · " + date;
+      desc.textContent = (book.pages?.length || 0) + " coloring pages + covers · " + (book.category || "General") + " · " + date;
       const actions = document.createElement("div");
       actions.className = "library-item-actions";
       const open = document.createElement("button");
@@ -999,6 +999,38 @@ async function refreshLibrary() {
 }
 
 $("libraryOpen").addEventListener("click",openLibrary);
+$("aiOpen").addEventListener("click",openAiSettings);
+$("aiClose").addEventListener("click",closeAiSettings);
+$("aiOverlay").addEventListener("click",event => {
+  if (event.target === $("aiOverlay")) closeAiSettings();
+});
+document.querySelectorAll('input[name="helperModel"]').forEach(input => {
+  input.addEventListener("change",async () => {
+    localStorage.setItem(HELPER_PREFERENCE_KEY,input.value);
+    syncAiSettings();
+    planner = null;
+    plannerModelId = null;
+    try {
+      await loadPlanner();
+      toast(HELPER_MODELS[input.value].name + " is ready.");
+    } catch (_) {
+      toast("That helper could not load. The built-in page planner is still available.");
+    }
+  });
+});
+$("loadHelperButton").addEventListener("click",async () => {
+  $("loadHelperButton").disabled = true;
+  try {
+    await loadPlanner();
+    toast(HELPER_MODELS[getSelectedHelperModel()].name + " is ready.");
+  } catch (_) {
+    toast("The selected helper could not load. The built-in page planner will be used.");
+  } finally {
+    $("loadHelperButton").disabled = false;
+  }
+});
+$("removeHelperButton").addEventListener("click",clearHelperCache);
+syncAiSettings();
 $("libraryClose").addEventListener("click",closeLibrary);
 $("libraryOverlay").addEventListener("click",event => {
   if (event.target === $("libraryOverlay")) closeLibrary();
@@ -1031,7 +1063,7 @@ $("clearLibrary").addEventListener("click",async () => {
   } catch (error) { toast("Could not clear the library."); }
 });
 document.addEventListener("keydown",event => {
-  if (event.key === "Escape") closeLibrary();
+  if (event.key === "Escape") { closeLibrary(); closeAiSettings(); }
 });
 
 
