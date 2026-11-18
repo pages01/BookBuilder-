@@ -1,0 +1,18 @@
+{
+  "name": "DoodlePress Coloring Book Studio",
+  "short_name": "DoodlePress",
+  "description": "Create printable coloring books with local AI planning and vector line art.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbf8f2",
+  "theme_color": "#fbf8f2",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
