@@ -214,7 +214,7 @@
           <div class="progress" id="modelProgress"><span id="modelProgressBar"></span></div>
           <div class="progress-label" id="modelProgressLabel">The model is only downloaded when you tap the button.</div>
           <div class="small-print">After setup, planning can run without sending your book idea to a server. Your browser may remove cached model files to free space.</div>
-          <div class="model-research"><strong>Next image model candidate: SD-Turbo (about 2.4 GB).</strong> This is a real text-to-image model, but full WebGPU memory use and iPhone Safari performance need device testing before enabling it. DoodlePress currently uses its printable vector engine for reliable pages.</div>
+          <div class="model-research"><strong>Next image model candidate: SD-Turbo (about 2.4 GB).</strong> This is a real text-to-image model, but full WebGPU memory use and iPhone Safari performance need device testing before enabling it. DoodlePress currently uses its printable vector engine for reliable pages.<br><button class="model-button" id="checkGpu" type="button" style="margin-top:9px">Check this device for WebGPU</button><div id="gpuStatus" style="margin-top:7px">This checks browser GPU access only, not whether a multi-gigabyte image model will fit.</div></div>
         </section>
         <section class="panel facts">
           <div class="fact"><div class="fact-icon" style="background:var(--pink2)">✎</div><div><strong>Made for coloring</strong><span>Bold outlines, roomy shapes, no color, and no busy backgrounds.</span></div></div>
@@ -739,6 +739,30 @@ async function refreshLibrary() {
     $("librarySummary").textContent = "Library unavailable";
   }
 }
+
+$("checkGpu").addEventListener("click",async () => {
+  const output = $("gpuStatus");
+  const button = $("checkGpu");
+  button.disabled = true;
+  output.textContent = "Checking browser GPU access…";
+  try {
+    if (!navigator.gpu) {
+      output.textContent = "WebGPU is not available in this browser session. The local vector artwork will still work.";
+      return;
+    }
+    const adapter = await navigator.gpu.requestAdapter({powerPreference:"high-performance"});
+    if (!adapter) {
+      output.textContent = "Safari exposes WebGPU, but no compatible GPU adapter was returned. The local vector artwork will still work.";
+      return;
+    }
+    const limit = adapter.limits && adapter.limits.maxTextureDimension2D ? adapter.limits.maxTextureDimension2D : "unknown";
+    output.textContent = "WebGPU adapter found. Maximum 2D texture: " + limit + ". This is encouraging, but it does not confirm SD-Turbo memory capacity or stability.";
+  } catch (error) {
+    output.textContent = "The WebGPU check could not complete. The built-in local artwork remains available.";
+  } finally {
+    button.disabled = false;
+  }
+});
 
 $("libraryOpen").addEventListener("click",openLibrary);
 $("libraryClose").addEventListener("click",closeLibrary);
