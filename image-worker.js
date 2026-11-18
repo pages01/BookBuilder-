@@ -21,7 +21,10 @@ async function getOrt() {
       }
       runtime.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/";
       return runtime;
-    })();
+    })().catch(error => {
+      ortPromise = null;
+      throw error;
+    });
   }
   return ortPromise;
 }
