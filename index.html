@@ -1181,11 +1181,16 @@ pdfButton.addEventListener("click", async () => {
     if (!JsPDF) throw new Error("PDF tools did not load.");
     const doc = new JsPDF({orientation:"portrait",unit:"mm",format:"letter",compress:true});
     doc.setProperties({title:currentBook.title,subject:"Printable coloring book made with DoodlePress",creator:"DoodlePress"});
-    for (let i = 0; i < currentBook.pages.length; i++) {
+    const exportPages = [
+      {svg:currentBook.coverSvg || makeCoverSvg(currentBook)},
+      ...currentBook.pages,
+      {svg:currentBook.backSvg || makeBackCoverSvg(currentBook)}
+    ];
+    for (let i = 0; i < exportPages.length; i++) {
       if (i > 0) doc.addPage("letter","portrait");
-      const data = await svgToPng(currentBook.pages[i].svg,1224,1584);
+      const data = await svgToPng(exportPages[i].svg,1224,1584);
       doc.addImage(data,"PNG",0,0,215.9,279.4,undefined,"FAST");
-      pdfButton.textContent = "Building PDF " + (i + 1) + "/" + currentBook.pages.length;
+      pdfButton.textContent = "Building PDF " + (i + 1) + "/" + exportPages.length;
     }
     const name = (currentBook.title || "DoodlePress-book").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "doodlepress-book";
     doc.save(name + ".pdf");
