@@ -1082,20 +1082,25 @@ form.addEventListener("submit", async (event) => {
   createButton.textContent = "Planning your pages…";
   try {
     const fallback = makeFallbackPages(title, description, category, count);
+    const backupPages = makeFallbackPages(title, description, category, count * 4);
     let pages = fallback;
     let aiUsed = false;
-    if (planner) {
-      try {
-        setModelProgress(100, "Planning page ideas on this device…");
-        pages = await askPlanner(title, description, category, count, fallback, buildTime);
-        aiUsed = pages !== fallback;
-      } catch (error) {
-        pages = fallback;
-        toast("The local planner had trouble. I used the built-in page planner instead.");
+    const helperModel = getSelectedHelperModel();
+    try {
+      if (!planner || plannerModelId !== HELPER_MODELS[helperModel].id) await loadPlanner();
+      if (planner && plannerModelId === HELPER_MODELS[helperModel].id) {
+        setModelProgress(100, "Planning page ideas with " + HELPER_MODELS[helperModel].name + "…");
+        const plannedPages = await askPlanner(title, description, category, count, fallback, buildTime);
+        aiUsed = plannedPages !== fallback;
+        pages = plannedPages;
       }
+    } catch (error) {
+      pages = fallback;
+      toast("The local helper had trouble. I used the built-in page planner instead.");
     }
+    pages = uniquePageList(pages,backupPages,count);
     createButton.textContent = "Drawing page 1 of " + count + "…";
-    const book = {title, description, category, buildTime, aiUsed, pages:[]};
+    const book = {schemaVersion:2,title,description,category,buildTime,aiUsed,helperModel,pages:[]};
     for (let index = 0; index < pages.length; index++) {
       const page = pages[index];
       book.pages.push({...page, svg:makeSvg(page,index,count,title,category,buildTime)});
@@ -1104,6 +1109,8 @@ form.addEventListener("submit", async (event) => {
       createButton.textContent = "Drawing page " + (index + 1) + " of " + count + "…";
       if (index % 2 === 1) await new Promise(resolve => requestAnimationFrame(resolve));
     }
+    book.coverSvg = makeCoverSvg(book);
+    book.backSvg = makeBackCoverSvg(book);
     let saved = false;
     try {
       await saveBook(book);
