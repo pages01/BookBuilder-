@@ -1306,8 +1306,6 @@ form.addEventListener("submit",async event=>{
       helperModel:"director",imageMode,pages:[],sources:[]
     };
     const usedSourceIds=new Set();
-    let sourceFallbacks=0;
-    let sketchFallbacks=0;
     for(let index=0;index<pages.length;index++) {
       const page=pages[index];
       if(imageMode==="trace") {
@@ -1339,13 +1337,7 @@ form.addEventListener("submit",async event=>{
     try { await saveBook(book); saved=true; }
     catch(error) { console.warn("Book preview is ready, but browser storage could not save it.",error); }
     renderBook(book);
-    if(sourceFallbacks || sketchFallbacks) {
-      toast(sourceFallbacks
-        ? sourceFallbacks+" source searches needed a generated or built-in replacement."
-        : sketchFallbacks+" drawings used the built-in vector backup.");
-    } else {
-      toast(saved ? "Your book is ready and saved to your library." : "Your book is ready, but this browser could not save it.");
-    }
+    toast(saved ? "Your book is ready and saved to your library." : "Your book is ready, but this browser could not save it.");
   } catch(error) {
     console.error(error);
     toast(error && error.message ? error.message : "Something went wrong while making the book. Please try again.");
