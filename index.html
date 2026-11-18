@@ -1332,6 +1332,7 @@ form.addEventListener("submit",async event=>{
     };
     const usedSourceIds=new Set();
     let skippedPages=0;
+    let firstPageError=null;
     for(let index=0;index<pages.length;index++) {
       const page=pages[index];
       try {
@@ -1354,12 +1355,18 @@ form.addEventListener("submit",async event=>{
         book.pages.push({...page});
       } catch(pageError) {
         skippedPages++;
-        console.warn("DoodlePress skipped a page that could not be illustrated: "+page.title,pageError);
+        firstPageError=pageError;
+        console.error("DoodlePress could not illustrate page "+(index+1)+": "+page.title,pageError);
+        createButton.textContent="Drawing failed — stopping early…";
+        break;
       }
       buildProgressBar.style.width=Math.round(((index+1)/count)*100)+"%";
       await new Promise(resolve=>requestAnimationFrame(resolve));
     }
-    if(!book.pages.length) throw new Error("No coloring pages could be completed. Check the selected AI model and try again.");
+    if(!book.pages.length) {
+      const detail=firstPageError && firstPageError.message ? firstPageError.message : "Unknown drawing error.";
+      throw new Error("DoodlePress stopped at the first page instead of wasting your time. "+detail);
+    }
     // Re-number only the pages that were successfully drawn.
     book.pages=book.pages.map((page,index)=>({...page,svg:makeSvg(page,index,book.pages.length,title,category,buildTime)}));
     book.coverSvg=makeCoverSvg(book);
