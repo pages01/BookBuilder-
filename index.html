@@ -249,7 +249,6 @@ let toastTimer = null;
 const $ = (id) => document.getElementById(id);
 const form = $("bookForm");
 const modelStatus = $("modelStatus");
-const modelButton = $("downloadModel");
 const modelProgress = $("modelProgress");
 const modelProgressBar = $("modelProgressBar");
 const modelProgressLabel = $("modelProgressLabel");
@@ -413,7 +412,7 @@ async function loadPlanner() {
       env.allowLocalModels = false;
       env.useBrowserCache = true;
       env.useWasmCache = true;
-      let device = "wasm";
+      let device = null;
       let dtype = "q4";
       if (navigator.gpu) {
         try {
@@ -421,10 +420,8 @@ async function loadPlanner() {
           if (adapter) { device = "webgpu"; dtype = "q4f16"; }
         } catch (_) {}
       }
-      setModelProgress(3, "Selected " + (device === "webgpu" ? "GPU acceleration" : "compatibility mode") + ". Preparing the local planner…");
-      planner = await pipeline("text-generation", MODEL_ID, {
-        device,
-        dtype,
+      setModelProgress(3, "Selected " + (device === "webgpu" ? "GPU acceleration" : "built-in CPU/WASM mode") + ". Preparing the local planner…");
+      const modelOptions = {dtype,
         progress_callback: (info) => {
           if (info && typeof info.progress === "number") {
             const label = info.file ? "Getting " + info.file : "Preparing local model files…";
@@ -433,7 +430,9 @@ async function loadPlanner() {
             setModelProgress(10, info.status);
           }
         }
-      });
+      };
+      if (device) modelOptions.device = device;
+      planner = await pipeline("text-generation", MODEL_ID, modelOptions);
       modelStatus.textContent = "READY";
       modelStatus.style.background = "#e5f6e9";
       modelStatus.style.color = "#315744";
