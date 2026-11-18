@@ -783,6 +783,11 @@ form.addEventListener("submit", async (event) => {
   const description = safeText($("bookDescription").value, 500);
   const category = $("bookCategory").value;
   const count = Math.max(8, Math.min(60, Number($("pageCount").value) || 20));
+  const buildTime = document.querySelector('input[name="buildTime"]:checked')?.value || "balanced";
+  const buildProgress = $("buildProgress");
+  const buildProgressBar = $("buildProgressBar");
+  buildProgress.style.display = "block";
+  buildProgressBar.style.width = "0%";
   createButton.disabled = true;
   createButton.textContent = "Planning your pages…";
   try {
@@ -792,29 +797,41 @@ form.addEventListener("submit", async (event) => {
     if (planner) {
       try {
         setModelProgress(100, "Planning page ideas on this device…");
-        pages = await askPlanner(title, description, category, count, fallback);
+        pages = await askPlanner(title, description, category, count, fallback, buildTime);
         aiUsed = pages !== fallback;
       } catch (error) {
         pages = fallback;
         toast("The local planner had trouble. I used the built-in page planner instead.");
       }
     }
-    createButton.textContent = "Drawing your pages…";
-    const book = {
-      title,
-      description,
-      category,
-      aiUsed,
-      pages: pages.map((page, index) => ({...page, svg:makeSvg(page,index,count,title)}))
-    };
+    createButton.textContent = "Drawing page 1 of " + count + "…";
+    const book = {title, description, category, buildTime, aiUsed, pages:[]};
+    for (let index = 0; index < pages.length; index++) {
+      const page = pages[index];
+      book.pages.push({...page, svg:makeSvg(page,index,count,title,category,buildTime)});
+      const percent = Math.round(((index + 1) / count) * 100);
+      buildProgressBar.style.width = percent + "%";
+      createButton.textContent = "Drawing page " + (index + 1) + " of " + count + "…";
+      if (index % 2 === 1) await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    let saved = false;
+    try {
+      await saveBook(book);
+      saved = true;
+    } catch (error) {
+      console.warn("Book preview is ready, but browser storage could not save it.",error);
+    }
     renderBook(book);
-    toast(aiUsed ? "Your book is ready — planned with local AI." : "Your coloring book is ready.");
+    toast(saved
+      ? (aiUsed ? "Your book is ready and saved to your library." : "Your book is ready and saved to your library.")
+      : "Your book is ready, but this browser could not save it.");
   } catch (error) {
     console.error(error);
     toast("Something went wrong while making the book. Please try again.");
   } finally {
     createButton.disabled = false;
     createButton.innerHTML = 'Create my coloring book <span aria-hidden="true">→</span>';
+    buildProgressBar.style.width = "100%";
   }
 });
 
@@ -885,6 +902,7 @@ pdfButton.addEventListener("click", async () => {
   }
 });
 
+refreshLibraryCount().catch(() => {});
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
 }
